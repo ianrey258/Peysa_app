@@ -58,13 +58,13 @@ class Home extends State<LandingPage>{
           ListTile(
             leading: Icon(FontAwesome.star),
             title: Text("Rating & Review",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(0);},
+            onTap: ()  { select(0);Navigator.pushNamed(context, 'RatingReview');},
             selected: selected[0],
           ),
           ListTile(
             leading: Icon(FontAwesome.bell),
             title: Text("Notifcation",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(1);},
+            onTap: ()  { select(1);Navigator.pushNamed(context, 'Notification');},
             selected: selected[1],
           ),
           ListTile(

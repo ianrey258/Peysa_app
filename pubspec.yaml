@@ -21,6 +21,7 @@ dependencies:
     sdk: flutter
   flutter_icons: ^1.0.0+1
   flutter_speed_dial: ^1.2.5
+  flutter_rating_bar: ^3.0.1+1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -38,6 +39,9 @@ dev_dependencies:
 flutter:
   assets:
     - assets/logos/
+    - assets/Inventory/
+    - assets/Profile/
+    - assets/Store/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
