@@ -10,14 +10,14 @@ class Notificationstate extends State<Notifications>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(170, 0, 170, .7),
+        backgroundColor: Colors.blueAccent,
         title: Text("Notification"),
       ),
       body: ListView(
         controller: _sc,
         children: <Widget>[
           Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Color.fromRGBO(170, 0, 170, .7)))),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.blue))),
             child: ListTile(
               onTap: (){},
               title: Text("New Store"),
@@ -40,7 +40,7 @@ class Notificationstate extends State<Notifications>{
             ),
           ),
           Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Color.fromRGBO(170, 0, 170, .7)))),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.blue))),
             child: ListTile(
               onTap: (){},
               title: Text("New Store"),
@@ -63,7 +63,7 @@ class Notificationstate extends State<Notifications>{
             ),
           ),
           Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Color.fromRGBO(170, 0, 170, .7)))),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.blue))),
             child: ListTile(
               onTap: (){},
               title: Text("Request Item"),
@@ -86,7 +86,7 @@ class Notificationstate extends State<Notifications>{
             ),
           ),
           Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Color.fromRGBO(170, 0, 170, .7)))),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color:Colors.blue))),
             child: ListTile(
               onTap: (){},
               title: Text("Reserve Item"),

@@ -49,7 +49,7 @@ class Register extends State<RegisterUser>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(170, 0, 170, .7),
+        backgroundColor: Colors.blueAccent,
         title: Text("Register"),
       ),
       body: Center(

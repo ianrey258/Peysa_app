@@ -35,21 +35,23 @@ class Home extends State<LandingPage>{
         controller: _sc,
         children: <Widget>[
           Container(
-            color: Color.fromRGBO(170, 0, 170, 1),
+            color: Colors.blue,
             child: DrawerHeader(
-              child: Column(
+              child: Row(
                 children: <Widget>[
                   Align(
                     alignment: Alignment.centerLeft,
                     child: CircleAvatar(
-                      radius: 60,
+                      radius: 65,
                       backgroundColor: Colors.white,
-                      child: Icon(FontAwesome.user_circle_o,size: 50,),
+                      backgroundImage: AssetImage("assets/Profile/UserProfile.jpg"),
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text("Ianrey J Acampado",style: TextStyle(fontSize: 15),),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Text("Marvin Bonani",style: TextStyle(fontSize: 15),),
+                    ),
                   ),
                 ],
               ),
@@ -70,13 +72,13 @@ class Home extends State<LandingPage>{
           ListTile(
             leading: Icon(FontAwesome.user),
             title: Text("Account",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(2);},
+            onTap: ()  { select(2);Navigator.pushNamed(context, 'Account');},
             selected: selected[2],
           ),
           ListTile(
             leading: Icon(FontAwesome.product_hunt),
             title: Text("Purchases",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(3);},
+            onTap: ()  { select(3);Navigator.pushNamed(context, "Purchases");},
             selected: selected[3],
           ),
           ListTile(
@@ -115,7 +117,7 @@ class Home extends State<LandingPage>{
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: Color.fromRGBO(170, 0, 170, 1),
+          backgroundColor: Colors.blueAccent,
           actions: <Widget>[
             Container(
               padding: EdgeInsets.all(5),
@@ -137,7 +139,7 @@ class Home extends State<LandingPage>{
             )
           ],
           bottom: TabBar(
-            labelColor: Color.fromRGBO(170, 0, 170, 1),
+            labelColor: Colors.blueAccent,
             unselectedLabelColor: Colors.grey,
             indicator: BoxDecoration(
               borderRadius: BorderRadius.only(

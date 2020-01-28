@@ -16,7 +16,10 @@ class LoginPage extends State<Login>{
   Widget facebookLogin(){
     return FloatingActionButton(
       heroTag: "facebook",
-      child: Icon(FontAwesome.facebook_f,size: 40,),
+      tooltip: "facebook",
+      backgroundColor: Colors.transparent,
+      elevation: 20,
+      child: Icon(FontAwesome.facebook_official,size: 40),
       onPressed: (){},
     );
   }
@@ -25,17 +28,19 @@ class LoginPage extends State<Login>{
     return FloatingActionButton(
       heroTag: "google",
       tooltip: "Google",
-      backgroundColor: Colors.redAccent,
+      elevation: 30,
+      backgroundColor: Colors.transparent,
       child: Icon(FontAwesome.google_plus_official,size: 50,),
       onPressed: (){},
     );
   }
   Widget helpButton(){
     return SpeedDial(
-      backgroundColor: Colors.greenAccent,
+      backgroundColor: Colors.transparent,
+      elevation: 2,
       curve: Curves.bounceIn,
       overlayColor: Color.fromRGBO(0, 0, 0, 1),
-      child: Icon(FontAwesome.question_circle_o,size: 50,),
+      child: Icon(FontAwesome.question_circle_o,size: 60,),
       children: [
         SpeedDialChild(
           label: "About Us",
@@ -61,7 +66,7 @@ class LoginPage extends State<Login>{
       body: SingleChildScrollView(
         controller: _sc,
         child: Container(
-          color: Color.fromRGBO(170, 0, 170, .7),
+          color: Colors.blueAccent,
           height: size.height,
           child: Column(
             children: <Widget>[
@@ -88,14 +93,17 @@ class LoginPage extends State<Login>{
                     child: Column(
                       children: <Widget>[
                         Container(
-                          margin: EdgeInsets.all(5),
+                          margin: EdgeInsets.all(2),
                           padding: EdgeInsets.all(5),
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(3),
-                                                    color: Color.fromRGBO(255, 255, 255, 0.7)
+                                                    color: Colors.transparent
                                                    ),
                           child: Row(
                             children: <Widget>[
-                              Container(child: Icon(FontAwesome.user,size: 40,)),
+                              Container(
+                                margin: EdgeInsets.fromLTRB(0,0,5,0),
+                                child: Icon(FontAwesome.user,size: 20,)
+                              ),
                               Expanded(
                                 child: Container(
                                   width: MediaQuery.of(context).size.width,
@@ -105,8 +113,8 @@ class LoginPage extends State<Login>{
                                   child: TextFormField(
                                     controller: username,
                                     decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.all(2),
-                                      hintText: "Username",
+                                      contentPadding: EdgeInsets.all(8),
+                                      hintText: "Username or Email",
                                       border: UnderlineInputBorder(borderSide: BorderSide.none),
                                     ),
                                   ),
@@ -116,14 +124,17 @@ class LoginPage extends State<Login>{
                           ),
                         ),
                         Container(
-                          margin: EdgeInsets.all(5),
+                          margin: EdgeInsets.all(2),
                           padding: EdgeInsets.all(5),
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(3),
-                                                    color: Color.fromRGBO(255, 255, 255, 0.7)
+                                                    color: Colors.transparent
                                                    ),
                           child: Row(
                             children: <Widget>[
-                              Container(child: Icon(Icons.vpn_key,size: 40,)),
+                              Container(
+                                margin: EdgeInsets.fromLTRB(0,0,5,0),
+                                child: Icon(Icons.vpn_key,size: 20,)
+                              ),
                               Expanded(
                                 child: Container(
                                   width: MediaQuery.of(context).size.width,
@@ -134,7 +145,7 @@ class LoginPage extends State<Login>{
                                     obscureText: true,
                                     controller: password,
                                     decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.all(2),
+                                      contentPadding: EdgeInsets.all(8),
                                       hintText: "Password",
                                       border: UnderlineInputBorder(borderSide: BorderSide.none),
                                     ),
@@ -146,11 +157,11 @@ class LoginPage extends State<Login>{
                         ),
                         Container(
                           width: size.width,
-                          padding: EdgeInsets.fromLTRB(40,5,40,0),
+                          padding: EdgeInsets.fromLTRB(50,5,50,0),
                           child: Material(
                             color: Color.fromRGBO(50, 50, 250, 0.8),
                             elevation: 8.0,
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(5),
                             child: FlatButton(
                               onPressed: ()=>Navigator.popAndPushNamed(context, 'Home'),
                               child: Text("Login",textScaleFactor: 1,),
@@ -159,55 +170,60 @@ class LoginPage extends State<Login>{
                         ),
                         Container(
                           width: size.width,
-                          height: size.height*.05,
-                          padding: EdgeInsets.fromLTRB(70,5,70,0),
-                          child: Material(
-                            color: Color.fromRGBO(50, 250, 50, 0.6),
-                            elevation: 8.0,
-                            borderRadius: BorderRadius.circular(30),
-                            child: FlatButton(
-                              onPressed: ()=>Navigator.pushNamed(context, 'RegUser'),
-                              child: Text("Register"),
+                          height: size.height*0.05,
+                          //color: Colors.brown,
+                          margin: EdgeInsets.all(.7),
+                          padding: EdgeInsets.fromLTRB(70,10,70,0),
+                          child: OutlineButton(
+                            borderSide: BorderSide(style: BorderStyle.none),
+                            onPressed: ()=>Navigator.pushNamed(context, 'RegUser'),
+                            child: Text(
+                              "Dont Have Account Yet?",
+                              style: TextStyle(decoration: TextDecoration.underline),
                             ),
                           ),
                         ),
+                        // Align(
+                        //   alignment: Alignment.bottomCenter,
+                        //   child: Text("or"),
+                        // ),
                       ],
                     ),
                   ),
                 ),
               ),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Divider(thickness: 1.5,),
-                  ),
-                  Text("   Alternative Account   "),
-                  Expanded(
-                    child: Divider(thickness: 1.5,),
-                  ),
-                ],
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: googleLogin(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: facebookLogin(),
-                    ),
-                  ],
-                ),
-              ),
+              // Row(
+              //   children: <Widget>[
+              //     Expanded(
+              //       child: Divider(thickness: 1.5,),
+              //     ),
+              //     Text("   Alternative Account   "),
+              //     Expanded(
+              //       child: Divider(thickness: 1.5,),
+              //     ),
+              //   ],
+              // ),
+              // Container(
+              //   padding: EdgeInsets.all(10),
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.start,
+              //     children: <Widget>[
+              //       Padding(
+              //         padding: const EdgeInsets.all(8.0),
+              //         child: googleLogin(),
+              //       ),
+              //       Padding(
+              //         padding: const EdgeInsets.all(8.0),
+              //         child: facebookLogin(),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
         ),
       ),
-      floatingActionButton: helpButton(),
+      //floatingActionButton: helpButton(),
     );
   }
 

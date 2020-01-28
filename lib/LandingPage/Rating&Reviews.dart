@@ -34,7 +34,7 @@ class RR extends State<RatingReviews>{
   var size = MediaQuery.of(context).size;
   return Scaffold(
     appBar: AppBar(
-      backgroundColor: Color.fromRGBO(170, 0, 170, .7),
+      backgroundColor: Colors.blueAccent,
       title: Text("Reviews & Rating"),
       ),
       body: ListView(
@@ -57,7 +57,7 @@ class RR extends State<RatingReviews>{
                   ),
                 ),
                 Material(
-                  elevation: 10,
+                  elevation: 30,
                   child: Image.asset('assets/Store/StoreProfile.jpg',
                     fit: BoxFit.fill,
                     width: size.width*.8,
@@ -99,7 +99,8 @@ class RR extends State<RatingReviews>{
             child: RaisedButton(
               padding: EdgeInsets.all(5),
               onPressed: (){},
-              elevation: 5,
+              elevation: 10,
+              color: Colors.white,
               child: Container(
                 height: MediaQuery.of(context).size.height*.2,
                 child: Row(
@@ -136,7 +137,8 @@ class RR extends State<RatingReviews>{
             child: RaisedButton(
               padding: EdgeInsets.all(5),
               onPressed: (){},
-              elevation: 5,
+              elevation: 10,
+              color: Colors.white,
               child: Container(
                 height: MediaQuery.of(context).size.height*.2,
                 child: Row(
@@ -173,7 +175,8 @@ class RR extends State<RatingReviews>{
             child: RaisedButton(
               padding: EdgeInsets.all(5),
               onPressed: (){},
-              elevation: 5,
+              elevation: 10,
+              color: Colors.white,
               child: Container(
                 height: MediaQuery.of(context).size.height*.2,
                 child: Row(
