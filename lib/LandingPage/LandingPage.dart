@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'package:pyesa_app/LandingPage/RequestItem.dart';
 
 class LandingPage extends StatefulWidget{
   Home createState() => Home();
@@ -30,17 +31,24 @@ class Home extends State<LandingPage>{
   }
   Widget _drawer(){
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.all(0),
-        controller: _sc,
+      child: Column(
         children: <Widget>[
           Container(
-            color: Colors.blue,
+            margin: EdgeInsets.only(top: 25),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(80),
+                topLeft: Radius.circular(80)
+              ),
+              color: Colors.blue,
+            ),
             child: DrawerHeader(
+              padding: EdgeInsets.fromLTRB(15, 0, 5, 20),
+              margin: EdgeInsets.all(0),
               child: Row(
                 children: <Widget>[
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.center,
                     child: CircleAvatar(
                       radius: 65,
                       backgroundColor: Colors.white,
@@ -57,53 +65,62 @@ class Home extends State<LandingPage>{
               ),
             ),
           ),
-          ListTile(
-            leading: Icon(FontAwesome.star),
-            title: Text("Rating & Review",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(0);Navigator.pushNamed(context, 'RatingReview');},
-            selected: selected[0],
-          ),
-          ListTile(
-            leading: Icon(FontAwesome.bell),
-            title: Text("Notifcation",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(1);Navigator.pushNamed(context, 'Notification');},
-            selected: selected[1],
-          ),
-          ListTile(
-            leading: Icon(FontAwesome.user),
-            title: Text("Account",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(2);Navigator.pushNamed(context, 'Account');},
-            selected: selected[2],
-          ),
-          ListTile(
-            leading: Icon(FontAwesome.product_hunt),
-            title: Text("Purchases",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(3);Navigator.pushNamed(context, "Purchases");},
-            selected: selected[3],
-          ),
-          ListTile(
-            leading: Icon(FontAwesome5Solid.store),
-            title: Text("Store",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(4);},
-            selected: selected[4],
-          ),
-          ListTile(
-            leading: Icon(FontAwesome.eye),
-            title: Text("Find Spare Parts",style: TextStyle(fontSize: 20),),
-            onTap: ()  { select(5);},
-            selected: selected[5],
-          ),
-          ListTile(
-            leading: Icon(FontAwesome.sign_out),
-            title: Text(
-              "Logout",
-              style: TextStyle(fontSize: 20,color: Colors.red),
+          Container(
+            height: MediaQuery.of(context).size.height*.62,
+            child: ListView(
+              padding: EdgeInsets.all(0),
+              controller: _sc,
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(FontAwesome.star),
+                  title: Text("Rating & Review",style: TextStyle(fontSize: 20),),
+                  onTap: ()  { select(0);Navigator.pushNamed(context, 'RatingReview');},
+                  selected: selected[0],
+                ),
+                ListTile(
+                  leading: Icon(FontAwesome.bell),
+                  title: Text("Notifcation",style: TextStyle(fontSize: 20),),
+                  onTap: ()  { select(1);Navigator.pushNamed(context, 'Notification');},
+                  selected: selected[1],
+                ),
+                ListTile(
+                  leading: Icon(FontAwesome.user),
+                  title: Text("Account",style: TextStyle(fontSize: 20),),
+                  onTap: ()  { select(2);Navigator.pushNamed(context, 'Account');},
+                  selected: selected[2],
+                ),
+                ListTile(
+                  leading: Icon(FontAwesome.product_hunt),
+                  title: Text("Purchases",style: TextStyle(fontSize: 20),),
+                  onTap: ()  { select(3);Navigator.pushNamed(context, "Purchases");},
+                  selected: selected[3],
+                ),
+                ListTile(
+                  leading: Icon(FontAwesome5Solid.store),
+                  title: Text("Store",style: TextStyle(fontSize: 20),),
+                  onTap: ()  { select(4);Navigator.pushNamed(context, "Store");},
+                  selected: selected[4],
+                ),
+                ListTile(
+                  leading: Icon(FontAwesome.eye),
+                  title: Text("Request Spare Parts",style: TextStyle(fontSize: 20),),
+                  onTap: ()  { select(5);Navigator.pushNamed(context, "RequestItem");},
+                  selected: selected[5],
+                ),
+                ListTile(
+                  leading: Icon(FontAwesome.sign_out),
+                  title: Text(
+                    "Logout",
+                    style: TextStyle(fontSize: 20,color: Colors.red),
+                  ),
+                  onTap: (){
+                    Navigator.pop(context);
+                    Navigator.popAndPushNamed(context, '/',);
+                  },
+                ),
+              ],
             ),
-            onTap: (){
-              Navigator.pop(context);
-              Navigator.popAndPushNamed(context, '/',);
-            },
-          ),
+          )
         ],
       ),
     );
