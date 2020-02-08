@@ -174,7 +174,7 @@ class LoginPage extends State<Login>{
                                     topLeft: Radius.circular(30)
                                   ),
                                   child: FlatButton(
-                                    onPressed: ()=>Navigator.popAndPushNamed(context, 'RegUser'),
+                                    onPressed: ()=>Navigator.pushNamed(context, 'RegUser'),
                                     child: Text("Register",textScaleFactor: 1,),
                                   ),
                                 ),

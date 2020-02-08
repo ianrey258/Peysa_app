@@ -11,8 +11,17 @@ class RequestItemstate extends State<RequestItem>{
       appBar: AppBar(
         title: Text("Requested Item"),
       ),
-      body: Container(
-
+      body: Card(
+        child: GridView.count(
+          crossAxisCount: 5,
+          children: <Widget>[
+            Card(),
+            Card(),
+            Card(),
+            Card(),
+            Card(),
+          ],
+        ),
       ),
     );
   }
