@@ -5,73 +5,82 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:geolocation/geolocation.dart';
 
-class LandingPage extends StatefulWidget{
+class LandingPage extends StatefulWidget {
   Home createState() => Home();
 }
-class Home extends State<LandingPage>{
 
+class Home extends State<LandingPage> {
   TextEditingController _search = TextEditingController();
   ScrollController _sc = ScrollController();
   MapController _mapController = MapController();
   List<bool> selected = [];
 
   @override
-  initState(){
+  initState() {
     super.initState();
     setState(() {
-      for(int i=0;i<10;i++){
+      for (int i = 0; i < 10; i++) {
         selected.add(false);
       }
     });
   }
 
-  select(int i){
+  select(int i) {
     setState(() {
-      for(int j=0;j<10;j++){
-        i==j?selected[j]=true:selected[j]=false;
+      for (int j = 0; j < 10; j++) {
+        i == j ? selected[j] = true : selected[j] = false;
       }
     });
   }
+
   getPermission() async {
-    final GeolocationResult result = await Geolocation.requestLocationPermission(
-                                      permission: LocationPermission(
-                                        android: LocationPermissionAndroid.fine,
-                                        ios: LocationPermissionIOS.always));
-      return result;
+    final GeolocationResult result =
+        await Geolocation.requestLocationPermission(
+            permission: LocationPermission(
+                android: LocationPermissionAndroid.fine,
+                ios: LocationPermissionIOS.always));
+    return result;
   }
 
   getLocation() {
     return getPermission().then((result) async {
-      if(result.isSuccessful){
-        final coords = await Geolocation.currentLocation(accuracy: LocationAccuracy.best);
+      if (result.isSuccessful) {
+        final coords =
+            await Geolocation.currentLocation(accuracy: LocationAccuracy.best);
       }
     });
   }
 
-  buildMap(){
-    getLocation().then((response){
-      if(response.isSuccessful){
-        response.listen((value){
-          _mapController.move(LatLng(8.4977678,124.6290168), 15.0);
+  buildMap() {
+    getLocation().then((response) {
+      if (response.isSuccessful) {
+        response.listen((value) {
+          _mapController.move(LatLng(8.4977678, 124.6290168), 15.0);
         });
-      }
-      else{
-        _mapController.move(LatLng(8.4977678,124.6290168), 15.0);
+      } else {
+        _mapController.move(LatLng(8.4977678, 124.6290168), 15.0);
       }
     });
   }
-
 
   Future<bool> showFilter() async {
     return await showDialog(
-      context: context,
-      builder: (_){
-        return FilterDialog();
-      }
-    );
+        context: context,
+        builder: (_) {
+          return FilterDialog();
+        });
   }
 
-  Widget _drawer(){
+  Future<bool> showItemDetail(String name,double price, String picture) async {
+    return await showDialog(
+      context: context,
+      builder: (_) {
+        return ShowItemDetail(name: name,price: price,picture: picture);
+        }
+      );
+  }
+
+  Widget _drawer() {
     return Drawer(
       child: Column(
         children: <Widget>[
@@ -79,9 +88,8 @@ class Home extends State<LandingPage>{
             margin: EdgeInsets.only(top: 0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(80),
-                topLeft: Radius.circular(80)
-              ),
+                  bottomLeft: Radius.circular(80),
+                  topLeft: Radius.circular(80)),
               color: Colors.blue,
             ),
             child: DrawerHeader(
@@ -94,13 +102,17 @@ class Home extends State<LandingPage>{
                     child: CircleAvatar(
                       radius: 65,
                       backgroundColor: Colors.white,
-                      backgroundImage: AssetImage("assets/Profile/UserProfile.jpg"),
+                      backgroundImage:
+                          AssetImage("assets/Profile/UserProfile.jpg"),
                     ),
                   ),
                   Expanded(
                     child: Align(
                       alignment: Alignment.bottomRight,
-                      child: Text("Marvin Bonani",style: TextStyle(fontSize: 15),),
+                      child: Text(
+                        "Marvin Bonani",
+                        style: TextStyle(fontSize: 15),
+                      ),
                     ),
                   ),
                 ],
@@ -108,56 +120,95 @@ class Home extends State<LandingPage>{
             ),
           ),
           Container(
-            height: MediaQuery.of(context).size.height*.65,
+            height: MediaQuery.of(context).size.height * .65,
             child: ListView(
               padding: EdgeInsets.all(0),
               controller: _sc,
               children: <Widget>[
                 ListTile(
                   leading: Icon(FontAwesome.star),
-                  title: Text("Rating & Review",style: TextStyle(fontSize: 20),),
-                  onTap: ()  { select(0);Navigator.pushNamed(context, 'RatingReview');},
+                  title: Text(
+                    "Rating & Review",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    select(0);
+                    Navigator.pushNamed(context, 'RatingReview');
+                  },
                   selected: selected[0],
                 ),
                 ListTile(
                   leading: Icon(FontAwesome.bell),
-                  title: Text("Notifcation",style: TextStyle(fontSize: 20),),
-                  onTap: ()  { select(1);Navigator.pushNamed(context, 'Notification');},
+                  title: Text(
+                    "Notifcation",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    select(1);
+                    Navigator.pushNamed(context, 'Notification');
+                  },
                   selected: selected[1],
                 ),
                 ListTile(
                   leading: Icon(FontAwesome.user),
-                  title: Text("Account",style: TextStyle(fontSize: 20),),
-                  onTap: ()  { select(2);Navigator.pushNamed(context, 'Account');},
+                  title: Text(
+                    "Account",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    select(2);
+                    Navigator.pushNamed(context, 'Account');
+                  },
                   selected: selected[2],
                 ),
                 ListTile(
                   leading: Icon(FontAwesome.product_hunt),
-                  title: Text("Purchases",style: TextStyle(fontSize: 20),),
-                  onTap: ()  { select(3);Navigator.pushNamed(context, "Purchases");},
+                  title: Text(
+                    "Purchases",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    select(3);
+                    Navigator.pushNamed(context, "Purchases");
+                  },
                   selected: selected[3],
                 ),
                 ListTile(
                   leading: Icon(FontAwesome5Solid.store),
-                  title: Text("Store",style: TextStyle(fontSize: 20),),
-                  onTap: ()  { select(4);Navigator.pushNamed(context, "Store");},
+                  title: Text(
+                    "Store",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    select(4);
+                    Navigator.pushNamed(context, "Store");
+                  },
                   selected: selected[4],
                 ),
                 ListTile(
                   leading: Icon(FontAwesome.eye),
-                  title: Text("Request Spare Parts",style: TextStyle(fontSize: 20),),
-                  onTap: ()  { select(5);Navigator.pushNamed(context, "RequestItem");},
+                  title: Text(
+                    "Request Spare Parts",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    select(5);
+                    Navigator.pushNamed(context, "RequestItem");
+                  },
                   selected: selected[5],
                 ),
                 ListTile(
                   leading: Icon(FontAwesome.sign_out),
                   title: Text(
                     "Logout",
-                    style: TextStyle(fontSize: 20,color: Colors.red),
+                    style: TextStyle(fontSize: 20, color: Colors.red),
                   ),
-                  onTap: (){
+                  onTap: () {
                     Navigator.pop(context);
-                    Navigator.popAndPushNamed(context, '/',);
+                    Navigator.popAndPushNamed(
+                      context,
+                      '/',
+                    );
                   },
                 ),
               ],
@@ -168,97 +219,62 @@ class Home extends State<LandingPage>{
     );
   }
 
-  Widget store(shopname,meters){
-    return Card(
-                    child: Container(
-                      height: 200,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          FlatButton(
-                            textColor: Colors.black,
-                            onPressed: (){},
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                //Icon(FontAwesome5Solid.store,size:20),
-                                Text(shopname,style: TextStyle(fontSize:18))
-                              ]
-                            )
-                          ),
-                          Expanded(
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              controller: _sc,
-                              children: <Widget>[
-                                RaisedButton(
-                                  color: Colors.white,
-                                  onPressed: (){},
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text("Item1"),
-                                      Expanded(
-                                        child: Image.asset('assets/Inventory/Ram.jpg',fit: BoxFit.fill,)
-                                      ),
-                                      Text("P1600.00")
-                                    ],
-                                  ),
-                                ),
-                                RaisedButton(
-                                  color: Colors.white,
-                                  onPressed: (){},
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text("Item2"),
-                                      Expanded(
-                                        child: Image.asset('assets/Inventory/Athlon_200GE.jpg',fit: BoxFit.fill,)
-                                      ),
-                                      Text("2500.00")
-                                    ],
-                                  ),
-                                ),
-                                RaisedButton(
-                                  color: Colors.white,
-                                  onPressed: (){},
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text("Item3"),
-                                      Expanded(
-                                        child: Image.asset('assets/Inventory/HDD_Hp.jpg',fit: BoxFit.fill,)
-                                      ),
-                                      Text("P2200.00")
-                                    ],
-                                  ),
-                                ),
-                                RaisedButton(
-                                  color: Colors.white,
-                                  onPressed: (){},
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text("Item4"),
-                                      Expanded(
-                                        child: Image.asset('assets/Inventory/Ram.jpg',fit: BoxFit.fill,)
-                                      ),
-                                      Text("P3600.00")
-                                    ],
-                                  ),
-                                ),
-                              ]
-                            ),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Expanded(child: SizedBox()),
-                              Text(meters)
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+  Widget item(name,price,picture) {
+    return RaisedButton(
+      color: Colors.white,
+      onPressed: ()async{showItemDetail(name, price, picture);},
+      child: Column(
+        children: <Widget>[
+          Text(name),
+          Expanded(
+            child: Image.asset(picture,fit: BoxFit.fill)
+          ),
+          Text("P"+price.toString())
+        ],
+      ),
+    );
   }
 
-  Widget build(BuildContext context){
+  Widget store(shopname, meters) {
+    return Card(
+      child: Container(
+        height: 200,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            FlatButton(
+                textColor: Colors.black,
+                onPressed: () {
+                  Navigator.pushNamed(context, 'Store1');
+                },
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      //Icon(FontAwesome5Solid.store,size:20),
+                      Text(shopname, style: TextStyle(fontSize: 18))
+                    ])),
+            Expanded(
+              child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  controller: _sc,
+                  children: <Widget>[
+                    item("Ram 2400hz", 1600.00, 'assets/Inventory/Ram.jpg'),
+                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg'),
+                    item("HDD_Hp", 2200.00, 'assets/Inventory/HDD_Hp.jpg'),
+                    item("Ram 2400hz", 3600.00, 'assets/Inventory/Ram.jpg'),
+                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg'),
+                  ]),
+            ),
+            Row(
+              children: <Widget>[Expanded(child: SizedBox()), Text(meters)],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return DefaultTabController(
       length: 2,
@@ -270,17 +286,17 @@ class Home extends State<LandingPage>{
           actions: <Widget>[
             Container(
               padding: EdgeInsets.all(5),
-              width: size.width*.7,
+              width: size.width * .7,
               child: TextField(
                 controller: _search,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(FontAwesome.search),
-                  contentPadding: EdgeInsets.all(5),
-                  hintText: "Search Item or Store",
-                  fillColor: Color.fromRGBO(255, 255, 255, 1),
-                  filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))
-                ),
+                    prefixIcon: Icon(FontAwesome.search),
+                    contentPadding: EdgeInsets.all(5),
+                    hintText: "Search Item or Store",
+                    fillColor: Color.fromRGBO(255, 255, 255, 1),
+                    filled: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8))),
               ),
             ),
             IconButton(
@@ -332,24 +348,21 @@ class Home extends State<LandingPage>{
               child: Column(
                 children: <Widget>[
                   Expanded(
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        center: LatLng(8.4977678,124.6290168),
-                        zoom: 13
-                      ),
-                      layers: [
-                        TileLayerOptions(
-                          urlTemplate:"https://api.tiles.mapbox.com/v4/"
-                            "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
+                      child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                        center: LatLng(8.4977678, 124.6290168), zoom: 13),
+                    layers: [
+                      TileLayerOptions(
+                          urlTemplate: "https://api.tiles.mapbox.com/v4/"
+                              "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
                           additionalOptions: {
-                            'accessToken':'pk.eyJ1IjoiaWFucmV5MjU4IiwiYSI6ImNrNmJubzlwZjAxbjEza21zdW95NnQyMjEifQ.s1VIlRsbcHV6BbTQNmUHgA',
-                            'id':'mapbox.streets'
-                          }
-                        )
-                      ],
-                    )
-                  ),
+                            'accessToken':
+                                'pk.eyJ1IjoiaWFucmV5MjU4IiwiYSI6ImNrNmJubzlwZjAxbjEza21zdW95NnQyMjEifQ.s1VIlRsbcHV6BbTQNmUHgA',
+                            'id': 'mapbox.streets'
+                          })
+                    ],
+                  )),
                   // Container(
                   //   padding: EdgeInsets.all(10),
                   //   child: Align(
@@ -366,120 +379,252 @@ class Home extends State<LandingPage>{
             ),
           ],
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {Navigator.pushNamed(context, 'Cart');},
+          child: Icon(FontAwesome.shopping_cart),
+        ),
       ),
     );
   }
 }
 
-class FilterDialog extends StatefulWidget{
+class FilterDialog extends StatefulWidget {
   StateFilterDialog createState() => StateFilterDialog();
 }
-class StateFilterDialog extends State<FilterDialog>{
+
+class StateFilterDialog extends State<FilterDialog> {
   ScrollController _sc = ScrollController();
-  var meter = "500m",star = "5 Star",price = "Above P500",tag = "All";
-  Widget radioMeter(String value){
-    return Row(
-      children: <Widget>[
-        Radio(
-          value: value,
-          groupValue: meter,
-          onChanged: (val){setState(() {
+  String meter = "500m", star = "5 Star", price = "Above P500", tag = "All";
+  Widget radioMeter(String value) {
+    return Row(children: <Widget>[
+      Radio(
+        value: value,
+        groupValue: meter,
+        onChanged: (val) {
+          setState(() {
             meter = val;
-          });},
-        ),
-        Text(value)
-      ] 
-    );
+          });
+        },
+      ),
+      Text(value)
+    ]);
   }
-  Widget radioStar(String value){
-    return Row(
-      children: <Widget>[
-        Radio(
-          value: value,
-          groupValue: star,
-          onChanged: (val){setState(() {
+
+  Widget radioStar(String value) {
+    return Row(children: <Widget>[
+      Radio(
+        value: value,
+        groupValue: star,
+        onChanged: (val) {
+          setState(() {
             star = val;
-          });},
-        ),
-        Text(value)
-      ] 
-    );
+          });
+        },
+      ),
+      Text(value)
+    ]);
   }
-  Widget radioPrice(String value){
-    return Row(
-      children: <Widget>[
-        Radio(
-          value: value,
-          groupValue: price,
-          onChanged: (val){setState(() {
+
+  Widget radioPrice(String value) {
+    return Row(children: <Widget>[
+      Radio(
+        value: value,
+        groupValue: price,
+        onChanged: (val) {
+          setState(() {
             price = val;
-          });},
-        ),
-        Text(value)
-      ] 
-    );
+          });
+        },
+      ),
+      Text(value)
+    ]);
   }
-  Widget radioTag(String value){
-    return Row(
-      children: <Widget>[
-        Radio(
-          value: value,
-          groupValue: tag,
-          onChanged: (val){setState(() {
+
+  Widget radioTag(String value) {
+    return Row(children: <Widget>[
+      Radio(
+        value: value,
+        groupValue: tag,
+        onChanged: (val) {
+          setState(() {
             tag = val;
-          });},
+          });
+        },
+      ),
+      Text(value)
+    ]);
+  }
+
+  Widget build(_) {
+    return AlertDialog(
+      title: Row(children: <Widget>[
+        Icon(Icons.filter_list),
+        SizedBox(
+          width: 10,
         ),
-        Text(value)
-      ] 
+        Text("Filter")
+      ]),
+      content: SingleChildScrollView(
+        controller: _sc,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text("Ratings:"),
+            radioStar("5 Star"),
+            radioStar("4 Star"),
+            radioStar("3 Star"),
+            radioStar("2 Star"),
+            radioStar("1 Star"),
+            Text("Meters"),
+            radioMeter("50m"),
+            radioMeter("100m"),
+            radioMeter("250m"),
+            radioMeter("500m"),
+            Text("Budget Price"),
+            radioPrice("P0 - P50"),
+            radioPrice("P50 - P100"),
+            radioPrice("P100 - P250"),
+            radioPrice("P250 - P500"),
+            radioPrice("Above P500"),
+            Text("Tag"),
+            radioTag("All"),
+            radioTag("Bycicle"),
+            radioTag("Motorcyle"),
+            radioTag("Computer"),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        FlatButton(
+          color: Colors.white,
+          textColor: Colors.black,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text("OK"),
+        )
+      ],
     );
   }
-  Widget build(_){
+}
+
+class ShowItemDetail extends StatefulWidget {
+  final String name,picture;
+  final double price;
+  ShowItemDetail({Key key, this.name,this.price,this.picture}) : super (key: key);
+
+  ShowItemDetailstate createState() => ShowItemDetailstate();
+}
+
+class ShowItemDetailstate extends State<ShowItemDetail> {
+  var qty=1,description="asdasdasdasdasdasd",stock=10,totalprice=0.0;
+  TextEditingController text = TextEditingController();
+  @override
+  initState(){
+    super.initState();
+    setState(() {
+      text.text = qty.toString();
+      totalprice = qty*widget.price;
+    });
+  }
+
+  Widget build(_) {
     return AlertDialog(
-          title: Row(
-            children: <Widget>[
-              Icon(Icons.filter_list),
-              SizedBox(width: 10,),
-              Text("Filter")
-            ]
-          ),
-          content: SingleChildScrollView(
-              controller: _sc,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text("Ratings:"),
-                  radioStar("5 Star"),
-                  radioStar("4 Star"),
-                  radioStar("3 Star"),
-                  radioStar("2 Star"),
-                  radioStar("1 Star"),
-                  Text("Meters"),
-                  radioMeter("50m"),
-                  radioMeter("100m"),
-                  radioMeter("250m"),
-                  radioMeter("500m"),
-                  Text("Budget Price"),
-                  radioPrice("P0 - P50"),
-                  radioPrice("P50 - P100"),
-                  radioPrice("P100 - P250"),
-                  radioPrice("P250 - P500"),
-                  radioPrice("Above P500"),
-                  Text("Tag"),
-                  radioTag("All"),
-                  radioTag("Bycicle"),
-                  radioTag("Motorcyle"),
-                  radioTag("Computer"),
-                ],
-              ),
+      title: Center(child: Text(widget.name),),
+      content: Container(
+        height: MediaQuery.of(context).size.height*.5,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              height: MediaQuery.of(context).size.height*.3,
+              child: Center(child:Image.asset(widget.picture,fit: BoxFit.fill,)),
             ),
-          actions: <Widget>[
-            FlatButton(
-              color: Colors.white,
-              textColor: Colors.black,
-              onPressed: (){Navigator.pop(context);},
-              child: Text("OK"),
-            )
+            SizedBox(height: 15,),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text("Price:",style: TextStyle(fontSize: 15))
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text("P"+widget.price.toString(),style: TextStyle(fontSize: 15))
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text("Quatity:",style: TextStyle(fontSize: 15))
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: Icon(Icons.remove_circle_outline), onPressed: (){setState(() {
+                    qty -=1;
+                    text.text = qty.toString();
+                    totalprice = qty*widget.price;
+                  });}
+                ),
+                Container(
+                  width: 15,
+                  child: TextField(
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                    ),
+                    controller: text,
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.all(0),
+                  icon: Icon(Icons.add_circle_outline), onPressed: (){setState(() {
+                    qty +=1;
+                    text.text = qty.toString();
+                    totalprice = qty*widget.price;
+                  });}
+                ),
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text("Total Price:",style: TextStyle(fontSize: 15))
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text("P"+totalprice.toString(),style: TextStyle(fontSize: 15))
+                  ),
+                ),
+              ],
+            ),
           ],
-        );
+        ),
+      ),
+      actions: <Widget>[
+        RaisedButton(
+          color: Colors.blueAccent,
+          onPressed: (){},
+          child: Row(
+            children: <Widget>[
+              Icon(FontAwesome.cart_plus),
+              SizedBox(width: 5,),
+              Text("Add to Cart")
+            ],
+          ),
+        )
+      ],
+    );
   }
 }
