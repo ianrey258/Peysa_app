@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:io';
 
 class Store extends StatefulWidget {

@@ -4,6 +4,7 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:geolocation/geolocation.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class LandingPage extends StatefulWidget {
   Home createState() => Home();
@@ -71,13 +72,28 @@ class Home extends State<LandingPage> {
         });
   }
 
-  Future<bool> showItemDetail(String name,double price, String picture) async {
+  Future<bool> showItemDetail(String name,double price, String picture,String description,int stock,double rating) async {
     return await showDialog(
       context: context,
       builder: (_) {
-        return ShowItemDetail(name: name,price: price,picture: picture);
+        return ShowItemDetail(name: name,price: price,picture: picture,description: description,stock: stock,rating: rating);
         }
       );
+  }
+
+  Widget drawerButton(name,index,destination,icon){
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(
+        name,
+        style: TextStyle(fontSize: 20),
+      ),
+      onTap: () {
+        select(index);
+        Navigator.pushNamed(context, destination);
+      },
+      selected: selected[index],
+    );
   }
 
   Widget _drawer() {
@@ -125,78 +141,12 @@ class Home extends State<LandingPage> {
               padding: EdgeInsets.all(0),
               controller: _sc,
               children: <Widget>[
-                ListTile(
-                  leading: Icon(FontAwesome.star),
-                  title: Text(
-                    "Rating & Review",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  onTap: () {
-                    select(0);
-                    Navigator.pushNamed(context, 'RatingReview');
-                  },
-                  selected: selected[0],
-                ),
-                ListTile(
-                  leading: Icon(FontAwesome.bell),
-                  title: Text(
-                    "Notifcation",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  onTap: () {
-                    select(1);
-                    Navigator.pushNamed(context, 'Notification');
-                  },
-                  selected: selected[1],
-                ),
-                ListTile(
-                  leading: Icon(FontAwesome.user),
-                  title: Text(
-                    "Account",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  onTap: () {
-                    select(2);
-                    Navigator.pushNamed(context, 'Account');
-                  },
-                  selected: selected[2],
-                ),
-                ListTile(
-                  leading: Icon(FontAwesome.product_hunt),
-                  title: Text(
-                    "Purchases",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  onTap: () {
-                    select(3);
-                    Navigator.pushNamed(context, "Purchases");
-                  },
-                  selected: selected[3],
-                ),
-                ListTile(
-                  leading: Icon(FontAwesome5Solid.store),
-                  title: Text(
-                    "Store",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  onTap: () {
-                    select(4);
-                    Navigator.pushNamed(context, "Store");
-                  },
-                  selected: selected[4],
-                ),
-                ListTile(
-                  leading: Icon(FontAwesome.eye),
-                  title: Text(
-                    "Request Spare Parts",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  onTap: () {
-                    select(5);
-                    Navigator.pushNamed(context, "RequestItem");
-                  },
-                  selected: selected[5],
-                ),
+                drawerButton("Rating & Review", 0, 'RatingReview',FontAwesome.star),
+                drawerButton("Notifcation", 1, 'Notification', FontAwesome.bell),
+                drawerButton("Account", 2, 'Account', FontAwesome.user),
+                drawerButton("Purchases", 3, "Purchases", FontAwesome.product_hunt),
+                drawerButton("Store", 4, "Store", FontAwesome5Solid.store),
+                drawerButton("Request Spare Parts", 5, "RequestItem", FontAwesome.eye),
                 ListTile(
                   leading: Icon(FontAwesome.sign_out),
                   title: Text(
@@ -219,10 +169,10 @@ class Home extends State<LandingPage> {
     );
   }
 
-  Widget item(name,price,picture) {
+  Widget item(name,price,picture,description,stack,rating) {
     return RaisedButton(
       color: Colors.white,
-      onPressed: ()async{showItemDetail(name, price, picture);},
+      onPressed: ()async{showItemDetail(name, price, picture,description,stack,rating);},
       child: Column(
         children: <Widget>[
           Text(name),
@@ -250,21 +200,29 @@ class Home extends State<LandingPage> {
                 child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: <Widget>[
-                      //Icon(FontAwesome5Solid.store,size:20),
+                      Image.asset(
+                        'assets/Store/StoreProfile.jpg',
+                        fit: BoxFit.fill,
+                        width: 20,
+                        height: 20,
+                      ),
+                      SizedBox(width: 10,),
                       Text(shopname, style: TextStyle(fontSize: 18))
                     ])),
+            Divider(indent: 5,endIndent: 5,),
             Expanded(
               child: ListView(
                   scrollDirection: Axis.horizontal,
                   controller: _sc,
-                  children: <Widget>[
-                    item("Ram 2400hz", 1600.00, 'assets/Inventory/Ram.jpg'),
-                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg'),
-                    item("HDD_Hp", 2200.00, 'assets/Inventory/HDD_Hp.jpg'),
-                    item("Ram 2400hz", 3600.00, 'assets/Inventory/Ram.jpg'),
-                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg'),
+                  children: [
+                    item("Ram 2400hz", 1600.00, 'assets/Inventory/Ram.jpg',"asdasdasdasd",21,3.0),
+                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg',"asdasdasdasd",21,4.0),
+                    item("HDD_Hp", 2200.00, 'assets/Inventory/HDD_Hp.jpg',"asdasdasdasd",21,5.0),
+                    item("Ram 2400hz", 3600.00, 'assets/Inventory/Ram.jpg',"asdasdasdasd",2,4.5),
+                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg',"asdaasdasdadasdasdasda\nsdasdasd",21,4.0),
                   ]),
             ),
+            Divider(indent: 5,endIndent: 5,),
             Row(
               children: <Widget>[Expanded(child: SizedBox()), Text(meters)],
             ),
@@ -332,7 +290,7 @@ class Home extends State<LandingPage> {
               color: Colors.transparent,
               child: ListView(
                 padding: EdgeInsets.all(0),
-                children: <Widget>[
+                children: [
                   store("Store1", "50m Away"),
                   store("Store2", "100m Away"),
                   store("Store3", "120m Away"),
@@ -469,6 +427,11 @@ class StateFilterDialog extends State<FilterDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            Text("Tag"),
+            radioTag("All"),
+            radioTag("Bycicle"),
+            radioTag("Motorcyle"),
+            radioTag("Computer"),
             Text("Ratings:"),
             radioStar("5 Star"),
             radioStar("4 Star"),
@@ -486,11 +449,6 @@ class StateFilterDialog extends State<FilterDialog> {
             radioPrice("P100 - P250"),
             radioPrice("P250 - P500"),
             radioPrice("Above P500"),
-            Text("Tag"),
-            radioTag("All"),
-            radioTag("Bycicle"),
-            radioTag("Motorcyle"),
-            radioTag("Computer"),
           ],
         ),
       ),
@@ -509,16 +467,19 @@ class StateFilterDialog extends State<FilterDialog> {
 }
 
 class ShowItemDetail extends StatefulWidget {
-  final String name,picture;
-  final double price;
-  ShowItemDetail({Key key, this.name,this.price,this.picture}) : super (key: key);
+  final String name,picture,description;
+  final double price,rating;
+  final int stock;
+  ShowItemDetail({Key key, this.name,this.price,this.picture,this.description,this.stock,this.rating}) : super (key: key);
 
   ShowItemDetailstate createState() => ShowItemDetailstate();
 }
 
 class ShowItemDetailstate extends State<ShowItemDetail> {
-  var qty=1,description="asdasdasdasdasdasd",stock=10,totalprice=0.0;
+  var qty=1,totalprice=0.0;
   TextEditingController text = TextEditingController();
+  ScrollController _sc;
+
   @override
   initState(){
     super.initState();
@@ -527,20 +488,45 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
       totalprice = qty*widget.price;
     });
   }
+  Widget ratingWidget(){
+    return Center(
+      heightFactor: 2,
+      child: RatingBar(
+        itemCount: 5,
+        itemSize: 15,
+        initialRating: widget.rating,
+        onRatingUpdate: (r){},
+        itemBuilder: (context,_)=>Icon(
+          Icons.star,
+          color: Colors.amber
+        ),
+      ),
+    );
+  }
 
   Widget build(_) {
+    print(widget.description);
     return AlertDialog(
       title: Center(child: Text(widget.name),),
       content: Container(
         height: MediaQuery.of(context).size.height*.5,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          controller: _sc,
           children: <Widget>[
             Container(
-              height: MediaQuery.of(context).size.height*.3,
+              height: MediaQuery.of(context).size.height*.25,
               child: Center(child:Image.asset(widget.picture,fit: BoxFit.fill,)),
             ),
+            ratingWidget(),
             SizedBox(height: 15,),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text("Description: "+widget.description)
+                )
+              ],
+            ),
+            SizedBox(height: 5,),
             Row(
               children: <Widget>[
                 Expanded(
@@ -568,14 +554,17 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 IconButton(
                   padding: EdgeInsets.all(0),
                   icon: Icon(Icons.remove_circle_outline), onPressed: (){setState(() {
-                    qty -=1;
-                    text.text = qty.toString();
-                    totalprice = qty*widget.price;
+                    if(qty>1){
+                      qty -=1;
+                      text.text = qty.toString();
+                      totalprice = qty*widget.price;
+                    }
                   });}
                 ),
                 Container(
                   width: 15,
                   child: TextField(
+                    readOnly: true,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -586,9 +575,11 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 IconButton(
                   padding: EdgeInsets.all(0),
                   icon: Icon(Icons.add_circle_outline), onPressed: (){setState(() {
-                    qty +=1;
-                    text.text = qty.toString();
-                    totalprice = qty*widget.price;
+                    if(qty<=widget.stock){
+                      qty +=1;
+                      text.text = qty.toString();
+                      totalprice = qty*widget.price;
+                    }
                   });}
                 ),
               ],
