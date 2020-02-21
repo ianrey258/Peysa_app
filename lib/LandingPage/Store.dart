@@ -5,28 +5,25 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:io';
+import 'package:pyesa_app/Models/Item.dart';
+import 'package:pyesa_app/Models/Store.dart';
 
-class Store extends StatefulWidget {
-  Storestate createState() => Storestate();
+class MyStore extends StatefulWidget {
+  MyStorestate createState() => MyStorestate();
 }
 
-class Store1 extends StatefulWidget {
-  Store1State createState() => Store1State();
-}
-
-class Storestate extends State<Store> {
+class MyStorestate extends State<MyStore> {
   ScrollController _sc;
   //TabController _tb;
   GlobalKey<FormState> _key;
   List<TextEditingController> text = [];
-  Future<File> imageFile;
 
   @override
   initState() {
     super.initState();
     _key = new GlobalKey<FormState>();
     setState(() {
-      for (int i = 0; i < 10; i++) {
+      for (int i=0;i<10;i++) {
         text.add(new TextEditingController());
       }
     });
@@ -34,113 +31,57 @@ class Storestate extends State<Store> {
 
   clearimage() {}
 
-  gallery() {
-    Navigator.pop(context);
-    print(imageFile.toString());
-    setState(() {
-      //imageFile = ImagePicker.pickImage(source: ImageSource.gallery);
-    });
+  gallery() async {
+    var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+    imageFile != null ? await showAddItem(imageFile) : null;
   }
 
-  camera() {
-    //Navigator.pop(context);
-    setState(() {
-      imageFile = ImagePicker.pickImage(source: ImageSource.camera);
-    });
+  camera() async {
+    var imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+    imageFile != null ? await showAddItem(imageFile) : null;
   }
 
-  Future<bool> showAddItem() {
+  Future<bool> showAddItem(picture) {
     Navigator.pop(context);
     return showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Add Item"),
-            content: SingleChildScrollView(
-              controller: _sc,
-              child: Form(
-                key: _key,
-                child: Column(children: <Widget>[
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(color: Colors.yellowAccent),
-                  ),
-                  TextFormField(
-                    controller: text[0],
-                    decoration: InputDecoration(labelText: "Name Item"),
-                  ),
-                  TextFormField(
-                    controller: text[1],
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: "Qty of Stock"),
-                  ),
-                  TextFormField(
-                    controller: text[2],
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: "Price"),
-                  ),
-                  TextFormField(
-                    controller: text[3],
-                    decoration: InputDecoration(labelText: "Description"),
-                  ),
-                  TextFormField(
-                    controller: text[3],
-                    decoration: InputDecoration(labelText: "Category"),
-                  ),
-                  TextFormField(
-                    controller: text[3],
-                    decoration: InputDecoration(labelText: "Tag"),
-                  ),
-                ]),
-              ),
-            ),
-            actions: <Widget>[
-              Align(
-                alignment: Alignment.bottomRight,
-                child: FlatButton(
-                  textColor: Colors.black,
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("Add"),
-                ),
-              )
-            ],
-          );
-        });
+      context: context,
+      barrierDismissible: false,
+      builder: (_)=>RegisterItem(picture: picture)
+    );
   }
 
   Future<bool> showAddDialog() {
     return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            buttonPadding: EdgeInsets.all(0),
-            title: Text("Choose "),
-            elevation: 50,
-            content: Container(
-                height: MediaQuery.of(context).size.height * .2,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      RaisedButton(
-                        onPressed: showAddItem,
-                        child: Text("       Gallery      "),
-                      ),
-                      Row(children: <Widget>[
-                        Expanded(child: Divider()),
-                        Text("or"),
-                        Expanded(child: Divider()),
-                      ]),
-                      RaisedButton(
-                        onPressed: showAddItem,
-                        child: Text("Take A Photo"),
-                      ),
-                    ])),
-          );
-        });
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          buttonPadding: EdgeInsets.all(0),
+          title: Text("Choose "),
+          elevation: 50,
+          content: Container(
+            height: MediaQuery.of(context).size.height * .2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: gallery,
+                  child: Text("       Gallery      "),
+                ),
+                Row(children: <Widget>[
+                  Expanded(child: Divider()),
+                  Text("or"),
+                  Expanded(child: Divider()),
+                ]),
+                RaisedButton(
+                  onPressed: camera,
+                  child: Text("Take A Photo"),
+                ),
+              ]
+            )
+          ),
+        );
+      }
+    );
   }
 
   Widget build(BuildContext context) {
@@ -282,24 +223,42 @@ class Storestate extends State<Store> {
     );
   }
 }
+class OtherStore extends StatefulWidget {
+  final int id;
+  OtherStore({Key key,this.id}):super(key: key);
+  OtherStoreState createState() => OtherStoreState();
+}
 
-class Store1State extends State<Store1> {
+class OtherStoreState extends State<OtherStore> {
   ScrollController _sc;
+  Store store;
 
-  Widget products() {
+  @override
+  initState(){
+    super.initState();
+    print('num of stores '+Store.getListStore().length.toString());
+  }
+
+  setStore(id){
+    setState(() {
+      Store.getListStore().forEach((element) {element.id == id? store = element: null;});
+    });
+  }
+
+  Widget products(Item item){
     return Container(
       margin: EdgeInsets.all(5),
       child: ListTile(
         leading: Image.asset(
-          'assets/Inventory/Ram.jpg',
+          item.images[item.id].itemImg,
           fit: BoxFit.fill,
         ),
-        title: Text("Ram DDR3 2400hz"),
-        subtitle: Text("asdasdasdasdasdasdasdasda"),
+        title: Text(item.itemName),
+        subtitle: Text(item.itemDescription),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Text("P1200.00",style: TextStyle(fontSize: 15),),
+            Text("P"+item.itemPrice.toString(),style: TextStyle(fontSize: 15),),
           ],
         ),
         onTap: (){},
@@ -308,6 +267,8 @@ class Store1State extends State<Store1> {
   }
 
   Widget build(_) {
+    final OtherStore argu = ModalRoute.of(context).settings.arguments;
+    setStore(argu.id);
     var size = MediaQuery.of(context).size;
     return Scaffold(
       body: CustomScrollView(
@@ -316,7 +277,7 @@ class Store1State extends State<Store1> {
           SliverAppBar(
             expandedHeight: 200,
             flexibleSpace: Image.asset(
-              'assets/Store/StoreProfile.jpg',
+              store.images[0].images,
               fit: BoxFit.fill,
             ),
           ),
@@ -327,36 +288,30 @@ class Store1State extends State<Store1> {
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: Text("Following: 5"),
+                  child: Text("Following: "+store.storeFollowers),
                 )
               ),
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: Text("Rate: 4.5"),
+                  child: Text("Rate: "+store.storeRating),
                 )
               ),
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: Text("Visited: 5"),
+                  child: Text("Visited: "+store.storeVisited),
                 )
               ),
             ]),
             SizedBox(height: size.height*.02,),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
-            products(),
+            products(Item.getItemList()[0]),
+            products(Item.getItemList()[1]),
+            products(Item.getItemList()[2]),
+            products(Item.getItemList()[3]),
+            products(Item.getItemList()[4]),
+            products(Item.getItemList()[5]),
+            products(Item.getItemList()[0]),
           ]))
         ],
       ),
@@ -364,6 +319,84 @@ class Store1State extends State<Store1> {
         onPressed: () {Navigator.pushNamed(context, 'Cart');},
         child: Icon(FontAwesome.shopping_cart),
       ),
+    );
+  }
+}
+
+class RegisterItem extends StatefulWidget {
+  final File picture;
+
+  RegisterItem({Key key,this.picture}) : super(key: key);
+  @override
+  _RegisterItemState createState() => _RegisterItemState();
+}
+
+class _RegisterItemState extends State<RegisterItem> {
+  ScrollController _sc;
+  List<TextEditingController> text;
+  GlobalKey<FormState> _key;
+  File image;
+
+  @override
+  void initState() {
+    super.initState();
+    image = widget.picture;
+    text = [];
+    for(int i = 0; i < 10; i++){
+      text.add(TextEditingController());
+    }
+  }
+
+  Widget inputField(textlabel,controller,keyboardType){
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(labelText: textlabel),
+    );
+  }
+  Widget imageView(){
+    return image != null ? Image.file(image,width: 200,height: 200,) : Text("No Image");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Register Item"),
+      content: SingleChildScrollView(
+        controller: _sc,
+        child: Form(
+          key: _key,
+          child: Column(
+            children: <Widget>[
+              Center(
+                child: FlatButton(
+                  padding: EdgeInsets.all(0),
+                  child: imageView(), 
+                  onPressed: (){}
+                )
+              ),
+              inputField("Name Item",text[0],TextInputType.text),
+              inputField("Qty of Stock",text[1],TextInputType.number),
+              inputField("Price", text[2], TextInputType.number),
+              inputField("Description", text[3], TextInputType.text),
+              inputField("Category", text[4], TextInputType.text),
+              inputField("Tag", text[5], TextInputType.text),
+            ]
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        Align(
+          alignment: Alignment.bottomRight,
+          child: FlatButton(
+            textColor: Colors.black,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("Add"),
+          ),
+        )
+      ],
     );
   }
 }

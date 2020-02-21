@@ -5,6 +5,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:geolocation/geolocation.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:pyesa_app/LandingPage/Store.dart';
+import 'package:pyesa_app/Models/Store.dart';
+import 'package:pyesa_app/Models/Item.dart';
+import 'dart:math';
 
 class LandingPage extends StatefulWidget {
   Home createState() => Home();
@@ -67,18 +71,8 @@ class Home extends State<LandingPage> {
   Future<bool> showFilter() async {
     return await showDialog(
         context: context,
-        builder: (_) {
-          return FilterDialog();
-        });
-  }
-
-  Future<bool> showItemDetail(String name,double price, String picture,String description,int stock,double rating) async {
-    return await showDialog(
-      context: context,
-      builder: (_) {
-        return ShowItemDetail(name: name,price: price,picture: picture,description: description,stock: stock,rating: rating);
-        }
-      );
+        builder: (_)=>FilterDialog()
+    );
   }
 
   Widget drawerButton(name,index,destination,icon){
@@ -145,7 +139,7 @@ class Home extends State<LandingPage> {
                 drawerButton("Notifcation", 1, 'Notification', FontAwesome.bell),
                 drawerButton("Account", 2, 'Account', FontAwesome.user),
                 drawerButton("Purchases", 3, "Purchases", FontAwesome.product_hunt),
-                drawerButton("Store", 4, "Store", FontAwesome5Solid.store),
+                drawerButton("Store", 4, "MyStore", FontAwesome5Solid.store),
                 drawerButton("Request Spare Parts", 5, "RequestItem", FontAwesome.eye),
                 ListTile(
                   leading: Icon(FontAwesome.sign_out),
@@ -169,23 +163,45 @@ class Home extends State<LandingPage> {
     );
   }
 
-  Widget item(name,price,picture,description,stack,rating) {
+  Future<bool> showItemDetail(Item item) async {
+    return await showDialog(
+      context: context,
+      builder: (_) {
+        return ShowItemDetail(item: item,);
+        }
+      );
+  }
+
+  Widget item(Item item) {
     return RaisedButton(
       color: Colors.white,
-      onPressed: ()async{showItemDetail(name, price, picture,description,stack,rating);},
+      onPressed: ()async{showItemDetail(item);},
       child: Column(
         children: <Widget>[
-          Text(name),
+          Text(item.itemName),
           Expanded(
-            child: Image.asset(picture,fit: BoxFit.fill)
+            child: Image.asset(item.images[item.id].itemImg,fit: BoxFit.fill)
           ),
-          Text("P"+price.toString())
+          Text("P"+item.itemPrice.toString())
         ],
       ),
     );
   }
+  List<Widget> generateItems(){
+    List<Widget> listitem = [];
+    for(int i = 0;i<Random().nextInt(5);i++){
+      while(true){
+        var random = Random().nextInt(5);
+        if(random>0){
+          listitem.add(item(Item.getItemList()[random]));
+          break;
+        } 
+      }
+    }
+    return listitem;
+  }
 
-  Widget store(shopname, meters) {
+  Widget store(Store store, meters) {
     return Card(
       child: Container(
         height: 200,
@@ -195,32 +211,27 @@ class Home extends State<LandingPage> {
             FlatButton(
                 textColor: Colors.black,
                 onPressed: () {
-                  Navigator.pushNamed(context, 'Store1');
+                  Navigator.pushNamed(context, 'OtherStore',arguments: OtherStore(id: store.id));
                 },
                 child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: <Widget>[
                       Image.asset(
-                        'assets/Store/StoreProfile.jpg',
+                        store.images[0].images,
                         fit: BoxFit.fill,
-                        width: 20,
-                        height: 20,
+                        width: 30,
+                        height: 30,
                       ),
                       SizedBox(width: 10,),
-                      Text(shopname, style: TextStyle(fontSize: 18))
+                      Text(store.storeName, style: TextStyle(fontSize: 18))
                     ])),
             Divider(indent: 5,endIndent: 5,),
             Expanded(
               child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  controller: _sc,
-                  children: [
-                    item("Ram 2400hz", 1600.00, 'assets/Inventory/Ram.jpg',"asdasdasdasd",21,3.0),
-                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg',"asdasdasdasd",21,4.0),
-                    item("HDD_Hp", 2200.00, 'assets/Inventory/HDD_Hp.jpg',"asdasdasdasd",21,5.0),
-                    item("Ram 2400hz", 3600.00, 'assets/Inventory/Ram.jpg',"asdasdasdasd",2,4.5),
-                    item("Athlon_200GE", 2500.00,'assets/Inventory/Athlon_200GE.jpg',"asdaasdasdadasdasdasda\nsdasdasd",21,4.0),
-                  ]),
+                scrollDirection: Axis.horizontal,
+                controller: _sc,
+                children: generateItems()
+              ),
             ),
             Divider(indent: 5,endIndent: 5,),
             Row(
@@ -290,12 +301,12 @@ class Home extends State<LandingPage> {
               color: Colors.transparent,
               child: ListView(
                 padding: EdgeInsets.all(0),
-                children: [
-                  store("Store1", "50m Away"),
-                  store("Store2", "100m Away"),
-                  store("Store3", "120m Away"),
-                  store("Store4", "180m Away"),
-                  store("Store5", "200m Away"),
+                children: <Widget>[
+                  store(Store.getListStore()[0], "50m Away"),
+                  store(Store.getListStore()[1], "100m Away"),
+                  store(Store.getListStore()[2], "120m Away"),
+                  store(Store.getListStore()[3], "180m Away"),
+                  store(Store.getListStore()[4], "200m Away"),
                 ],
               ),
             ),
@@ -467,10 +478,8 @@ class StateFilterDialog extends State<FilterDialog> {
 }
 
 class ShowItemDetail extends StatefulWidget {
-  final String name,picture,description;
-  final double price,rating;
-  final int stock;
-  ShowItemDetail({Key key, this.name,this.price,this.picture,this.description,this.stock,this.rating}) : super (key: key);
+  final Item item;
+  ShowItemDetail({Key key, this.item}) : super (key: key);
 
   ShowItemDetailstate createState() => ShowItemDetailstate();
 }
@@ -485,7 +494,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
     super.initState();
     setState(() {
       text.text = qty.toString();
-      totalprice = qty*widget.price;
+      totalprice = qty*widget.item.itemPrice;
     });
   }
   Widget ratingWidget(){
@@ -494,7 +503,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
       child: RatingBar(
         itemCount: 5,
         itemSize: 15,
-        initialRating: widget.rating,
+        initialRating: widget.item.itemRating,
         onRatingUpdate: (r){},
         itemBuilder: (context,_)=>Icon(
           Icons.star,
@@ -505,9 +514,8 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
   }
 
   Widget build(_) {
-    print(widget.description);
     return AlertDialog(
-      title: Center(child: Text(widget.name),),
+      title: Center(child: Text(widget.item.itemName),),
       content: Container(
         height: MediaQuery.of(context).size.height*.5,
         child: ListView(
@@ -515,14 +523,14 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
           children: <Widget>[
             Container(
               height: MediaQuery.of(context).size.height*.25,
-              child: Center(child:Image.asset(widget.picture,fit: BoxFit.fill,)),
+              child: Center(child:Image.asset(widget.item.images[widget.item.id].itemImg,fit: BoxFit.fill,)),
             ),
             ratingWidget(),
             SizedBox(height: 15,),
             Row(
               children: <Widget>[
                 Expanded(
-                  child: Text("Description: "+widget.description)
+                  child: Text("Description: "+widget.item.itemDescription)
                 )
               ],
             ),
@@ -538,7 +546,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: Text("P"+widget.price.toString(),style: TextStyle(fontSize: 15))
+                    child: Text("P"+widget.item.itemPrice.toString(),style: TextStyle(fontSize: 15))
                   ),
                 ),
               ],
@@ -557,7 +565,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                     if(qty>1){
                       qty -=1;
                       text.text = qty.toString();
-                      totalprice = qty*widget.price;
+                      totalprice = qty*widget.item.itemPrice;
                     }
                   });}
                 ),
@@ -575,10 +583,10 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 IconButton(
                   padding: EdgeInsets.all(0),
                   icon: Icon(Icons.add_circle_outline), onPressed: (){setState(() {
-                    if(qty<=widget.stock){
+                    if(qty<=widget.item.itemStack){
                       qty +=1;
                       text.text = qty.toString();
-                      totalprice = qty*widget.price;
+                      totalprice = qty*widget.item.itemPrice;
                     }
                   });}
                 ),
