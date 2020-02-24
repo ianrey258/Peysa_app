@@ -29,8 +29,6 @@ class MyStorestate extends State<MyStore> {
     });
   }
 
-  clearimage() {}
-
   gallery() async {
     var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
     imageFile != null ? await showAddItem(imageFile) : null;
@@ -357,6 +355,7 @@ class _RegisterItemState extends State<RegisterItem> {
   Widget imageView(){
     return image != null ? Image.file(image,width: 200,height: 200,) : Text("No Image");
   }
+
 
   @override
   Widget build(BuildContext context) {
