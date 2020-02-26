@@ -167,7 +167,7 @@ class LoginPage extends State<Login>{
                               child: Container(
                                 margin: EdgeInsets.all(5),
                                 child: Material(
-                                  color: Colors.green,
+                                  color: Colors.orange,
                                   elevation: 8.0,
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(30),
@@ -184,7 +184,7 @@ class LoginPage extends State<Login>{
                               child: Container(
                                 margin: EdgeInsets.all(5),
                                 child: Material(
-                                  color: Color.fromRGBO(255, 131, 70, 1.0),
+                                  color: Colors.green,
                                   elevation: 8.0,
                                   borderRadius: BorderRadius.only(
                                     bottomRight: Radius.circular(30),

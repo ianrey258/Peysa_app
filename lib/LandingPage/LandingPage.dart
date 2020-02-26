@@ -18,24 +18,10 @@ class Home extends State<LandingPage> {
   TextEditingController _search = TextEditingController();
   ScrollController _sc = ScrollController();
   MapController _mapController = MapController();
-  List<bool> selected = [];
 
   @override
   initState() {
     super.initState();
-    setState(() {
-      for (int i = 0; i < 10; i++) {
-        selected.add(false);
-      }
-    });
-  }
-
-  select(int i) {
-    setState(() {
-      for (int j = 0; j < 10; j++) {
-        i == j ? selected[j] = true : selected[j] = false;
-      }
-    });
   }
 
   getPermission() async {
@@ -83,10 +69,8 @@ class Home extends State<LandingPage> {
         style: TextStyle(fontSize: 20),
       ),
       onTap: () {
-        select(index);
         Navigator.pushNamed(context, destination);
       },
-      selected: selected[index],
     );
   }
 
@@ -167,7 +151,7 @@ class Home extends State<LandingPage> {
     return await showDialog(
       context: context,
       builder: (_) {
-        return ShowItemDetail(item: item,);
+        return ShowItemDetail(item: item,quantity: 0,isEdit: false,);
         }
       );
   }
@@ -479,7 +463,9 @@ class StateFilterDialog extends State<FilterDialog> {
 
 class ShowItemDetail extends StatefulWidget {
   final Item item;
-  ShowItemDetail({Key key, this.item}) : super (key: key);
+  final int quantity;
+  @required bool isEdit = false;
+  ShowItemDetail({Key key, this.item,this.quantity,this.isEdit}) : super (key: key);
 
   ShowItemDetailstate createState() => ShowItemDetailstate();
 }
@@ -493,6 +479,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
   initState(){
     super.initState();
     setState(() {
+      qty = widget.quantity;
       text.text = qty.toString();
       totalprice = qty*widget.item.itemPrice;
     });
@@ -511,6 +498,35 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
         ),
       ),
     );
+  }
+
+  List<Widget> actions(){
+    if(widget.isEdit){
+      return [
+        RaisedButton(
+          color: Colors.redAccent,
+          onPressed: (){},
+          child: Text("Remove")
+        ),
+        RaisedButton(
+          color: Colors.blueAccent,
+          onPressed: (){Navigator.pop(context);},
+          child: Text("OK")
+        )
+      ];
+    } else {
+      return [RaisedButton(
+        color: Colors.blueAccent,
+        onPressed: (){Navigator.pop(context);},
+        child: Row(
+          children: <Widget>[
+            Icon(FontAwesome.cart_plus),
+            SizedBox(width: 5,),
+            Text("Add to Cart")
+          ],
+        ),
+      )];
+    }
   }
 
   Widget build(_) {
@@ -611,19 +627,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
           ],
         ),
       ),
-      actions: <Widget>[
-        RaisedButton(
-          color: Colors.blueAccent,
-          onPressed: (){},
-          child: Row(
-            children: <Widget>[
-              Icon(FontAwesome.cart_plus),
-              SizedBox(width: 5,),
-              Text("Add to Cart")
-            ],
-          ),
-        )
-      ],
+      actions: actions()
     );
   }
 }

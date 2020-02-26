@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:pyesa_app/Models/Item.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class RequestItem extends StatefulWidget{
   RequestItemstate createState() => RequestItemstate();
@@ -13,7 +15,7 @@ class RequestItemstate extends State<RequestItem>{
 
   Widget requestItem(){
     return ListTile(
-      contentPadding: EdgeInsets.only(bottom: 5),
+      contentPadding: EdgeInsets.only(bottom: 5,left: 5,right: 5),
       leading: Image.asset(Itemimg.getImage()[0].itemImg),
       title: Text("Location: All Region"),
       subtitle: Row(
@@ -29,14 +31,14 @@ class RequestItemstate extends State<RequestItem>{
           )
         ],
       ),
-      onTap: (){},
+      onTap: (){Navigator.pushNamed(context, 'Bidding');},
     );
   }
 
   Future<bool> requestDialog(){
     return showDialog(
       context: context,
-      builder: (_){return RequestForm();},
+      builder: (_) => RequestForm()
     );
   }
 
@@ -64,7 +66,6 @@ class RequestItemstate extends State<RequestItem>{
         ),
       ),
       body: ListView(
-        padding: EdgeInsets.only(left: 5,right: 5),
         controller: _sc,
         children: <Widget>[
           requestItem(),
@@ -84,7 +85,10 @@ class RequestForm extends StatefulWidget {
 class _RequestFormState extends State<RequestForm> {
   List<TextEditingController> text = [];
   ScrollController _sc;
+  List<String> locations = ["All Region","Cagayan de Oro","Iligan City","Bukidnon"];
+  var selectedLoc = "All Region";
   var screenSize;
+  List<File> images = [];
 
   @override
   void initState() {
@@ -109,12 +113,73 @@ class _RequestFormState extends State<RequestForm> {
     );
   }
 
+  Widget dropDownLocation(){
+    return DropdownButtonFormField(
+      items: locations.map((String item){
+          return DropdownMenuItem(
+            value: item,
+            child: Text(item)
+          );
+        }
+      ).toList(), 
+      onChanged: (String val){
+        setState(() {
+          selectedLoc = val;
+        });
+      },
+      value: selectedLoc,
+    );
+  }
+
+  _getPicture(source) async {
+    File _item = await ImagePicker.pickImage(source: source);
+    setState(() {
+      _item != null ? images.add(_item) : null;
+    });
+    Navigator.pop(context);
+  }
+
+  Future<bool> chooseUpload(){
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Choose Upload"),
+        content: Container(
+          height: MediaQuery.of(context).size.height * .2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              RaisedButton(
+                onPressed: (){_getPicture(ImageSource.gallery);},
+                child: Text("       Gallery      "),
+              ),
+              Row(children: <Widget>[
+                Expanded(child: Divider()),
+                Text("or"),
+                Expanded(child: Divider()),
+              ]),
+              RaisedButton(
+                onPressed: (){_getPicture(ImageSource.camera);},
+                child: Text("Take A Photo"),
+              ),
+            ]
+          )
+        ),
+      ),
+    );
+  }
+
   Widget sampleImage(image){
     return FlatButton(
       padding: EdgeInsets.only(right: 5),
       onPressed: (){}, 
-      child: Image.asset(image)
+      child: Image.file(image)
     );
+  }
+
+  List<Widget> getImages(){
+    return images.isEmpty ? [Center(child: Text("No Sample Image"))]
+                          : images.map((e) => sampleImage(e)).toList();
   }
 
   Widget sampleItems(){
@@ -127,18 +192,14 @@ class _RequestFormState extends State<RequestForm> {
            child: SingleChildScrollView(
              scrollDirection: Axis.horizontal,
              child: Row(
-               children: <Widget>[
-                 sampleImage(Itemimg.getImage()[0].itemImg),
-                 sampleImage(Itemimg.getImage()[1].itemImg),
-                 sampleImage(Itemimg.getImage()[2].itemImg)
-               ],
+               children: getImages(),
              ),
            )
          ),
          Align(
            alignment: Alignment.centerRight,
            child: RaisedButton(
-             onPressed: (){},
+             onPressed: chooseUpload,
              child: Text("Upload Image"),
            ),
          )
@@ -158,8 +219,8 @@ class _RequestFormState extends State<RequestForm> {
           sampleItems(),
           form("Name of Item", 0, TextInputType.text),
           form("Description", 1, TextInputType.text),
-          form("Budget Price", 2, TextInputType.text),
-          form("Location", 3, TextInputType.text),
+          form("Budget Price", 2, TextInputType.number),
+          dropDownLocation()
         ],
       ),
       actions: <Widget>[
@@ -169,6 +230,204 @@ class _RequestFormState extends State<RequestForm> {
           child: Text("Send")
         )
       ],
+    );
+  }
+}
+
+class Bidding extends StatefulWidget {
+  @override
+  _BiddingState createState() => _BiddingState();
+}
+
+class _BiddingState extends State<Bidding> {
+  ScrollController _sc;
+
+  Widget itemImages(){
+    return Container(
+      height: MediaQuery.of(context).size.height*.4,
+      child: SingleChildScrollView(
+        controller: _sc,
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: <Widget>[
+            Image.asset(Itemimg.getImage()[0].itemImg),
+            Image.asset(Itemimg.getImage()[1].itemImg),
+            Image.asset(Itemimg.getImage()[2].itemImg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget bidItemDetail(){
+    return Container(
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text("Name: Ram DDR2 1600hz"),
+                Text("Description: Bahalag ThirdHand")
+              ],
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Text("Budget Money: P500"),
+                Text("Status: Open")
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget bidders(){
+    return ListTile(
+      contentPadding: EdgeInsets.all(5),
+      leading: CircleAvatar(
+        radius: 30,
+        child: Text("I"),
+        backgroundColor: Colors.red,
+      ),
+      onTap: (){Navigator.pushNamed(context, "BidChat");},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Bid Item"),),
+      body: ListView(
+        controller: _sc,
+        children: <Widget>[
+          itemImages(),
+          bidItemDetail(),
+          Divider(),
+          bidders(),
+          bidders()
+        ],
+      ),
+    );
+  }
+}
+
+class BidChat extends StatefulWidget {
+  @override
+  _BidChatState createState() => _BidChatState();
+}
+
+class _BidChatState extends State<BidChat> {
+  ScrollController _sc;
+  TextEditingController text = TextEditingController();
+  List<Widget> conversation =[];
+
+  @override
+  initState(){
+    super.initState();
+    setState(() {
+      conversation.add(other("Hi!"));
+      conversation.add(you("Low"));
+    });
+  }
+
+  Widget other(text){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.all(10),
+          margin: EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(30)
+          ),
+          child: Text(text),
+        )
+      ],
+    );
+  }
+
+  Widget you(text){
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.all(10),
+          margin: EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.circular(30)
+          ),
+          child: Text(text,softWrap: true,),
+        )
+      ],
+    );
+  }
+
+  List<Widget> conversationDisplay(){
+    return conversation;
+  }
+
+  Widget inputText(){
+    return Material(
+      elevation: 10,
+      child: Row(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(FontAwesome.image),
+            onPressed: (){}
+          ),
+          Expanded(
+            child: TextField(
+              controller: text,
+              decoration: InputDecoration(
+                hintText: "Text Here"
+              ),
+            )
+          ),
+          IconButton(
+            icon: Icon(FontAwesome.send),
+            onPressed: (){
+              setState(() {
+                conversation.add(you(text.text));
+                text.text = "";
+              });
+            }
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _sc,
+                child: Container(
+                  height: MediaQuery.of(context).size.height*.8,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: conversationDisplay(),
+                  ),
+                )
+              )
+            ),
+            inputText()
+          ],
+        ),
+      )
     );
   }
 }

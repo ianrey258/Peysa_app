@@ -7,6 +7,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'dart:io';
 import 'package:pyesa_app/Models/Item.dart';
 import 'package:pyesa_app/Models/Store.dart';
+import 'package:pyesa_app/LandingPage/LandingPage.dart';
 
 class MyStore extends StatefulWidget {
   MyStorestate createState() => MyStorestate();
@@ -29,13 +30,8 @@ class MyStorestate extends State<MyStore> {
     });
   }
 
-  gallery() async {
-    var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-    imageFile != null ? await showAddItem(imageFile) : null;
-  }
-
-  camera() async {
-    var imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
+  getPicture(source) async {
+    var imageFile = await ImagePicker.pickImage(source: source);
     imageFile != null ? await showAddItem(imageFile) : null;
   }
 
@@ -62,7 +58,7 @@ class MyStorestate extends State<MyStore> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 RaisedButton(
-                  onPressed: gallery,
+                  onPressed: (){getPicture(ImageSource.gallery);},
                   child: Text("       Gallery      "),
                 ),
                 Row(children: <Widget>[
@@ -71,7 +67,7 @@ class MyStorestate extends State<MyStore> {
                   Expanded(child: Divider()),
                 ]),
                 RaisedButton(
-                  onPressed: camera,
+                  onPressed: (){getPicture(ImageSource.gallery);},
                   child: Text("Take A Photo"),
                 ),
               ]
@@ -243,6 +239,15 @@ class OtherStoreState extends State<OtherStore> {
     });
   }
 
+  Future<bool> showItemDetail(Item item) async {
+    return await showDialog(
+      context: context,
+      builder: (_) {
+        return ShowItemDetail(item: item,quantity: 0,isEdit: false,);
+        }
+      );
+  }
+
   Widget products(Item item){
     return Container(
       margin: EdgeInsets.all(5),
@@ -259,7 +264,7 @@ class OtherStoreState extends State<OtherStore> {
             Text("P"+item.itemPrice.toString(),style: TextStyle(fontSize: 15),),
           ],
         ),
-        onTap: (){},
+        onTap: (){showItemDetail(item);},
       ),
     );
   }

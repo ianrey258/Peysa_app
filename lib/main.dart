@@ -35,6 +35,8 @@ class MyApp extends StatelessWidget {
         'OtherStore' : (BuildContext context) => OtherStore(),
         'Cart' : (BuildContext context) => Cart(),
         'RequestItem' : (BuildContext context) => RequestItem(),
+        'Bidding' : (BuildContext context) => Bidding(),
+        'BidChat' : (BuildContext context) => BidChat(),
       },
     );
   }
