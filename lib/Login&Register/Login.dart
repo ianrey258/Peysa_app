@@ -7,13 +7,28 @@ class Login extends StatefulWidget{
 }
 
 class LoginPage extends State<Login>{
-
   ScrollController _sc;
-  TextEditingController username;
-  TextEditingController password;
-  final _key = new GlobalKey<FormState>();
+  List<TextEditingController> text;
+  final _key = GlobalKey<FormState>();
+  var isObscure = true;
 
-  Widget facebookLogin(){
+  @override
+  initState(){
+    super.initState();
+    text = [];
+    for(int i=0;i<2;i++){
+      text.add(TextEditingController());
+    }
+  }
+
+  _validate(){
+    if(_key.currentState.validate()){
+      _key.currentState.save();
+      Navigator.popAndPushNamed(context, 'Home');
+    }
+  }
+
+  Widget _facebookLogin(){
     return FloatingActionButton(
       heroTag: "facebook",
       tooltip: "facebook",
@@ -24,7 +39,7 @@ class LoginPage extends State<Login>{
     );
   }
 
-  Widget googleLogin(){
+  Widget _googleLogin(){
     return FloatingActionButton(
       heroTag: "google",
       tooltip: "Google",
@@ -34,7 +49,7 @@ class LoginPage extends State<Login>{
       onPressed: (){},
     );
   }
-  Widget helpButton(){
+  Widget _helpButton(){
     return SpeedDial(
       backgroundColor: Colors.transparent,
       elevation: 2,
@@ -57,6 +72,33 @@ class LoginPage extends State<Login>{
           child: Icon(FontAwesome.question,size: 30,),
         ),
       ],
+    );
+  }
+
+
+  Widget _inputField(hintText,controller,icon){
+    var obscure = hintText != "Password" ? false : isObscure;
+    Widget seePass = hintText != "Password" ? null : IconButton(
+      icon: Icon(FontAwesome.eye_slash), 
+      onPressed: (){setState((){isObscure = isObscure ? false : true;});}
+    );
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      margin: EdgeInsets.all(5),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.all(0),
+          fillColor: Color.fromRGBO(168, 168, 168, 0.5),
+          filled: true,
+          hintText: hintText,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30),borderSide: BorderSide.none),
+          suffixIcon: seePass,
+          prefixIcon: Icon(icon),
+        ),
+        validator: (val)=> val.length > 0 ? null : "Invalid "+hintText,
+      ),
     );
   }
 
@@ -92,79 +134,13 @@ class LoginPage extends State<Login>{
                     key: _key,
                     child: Column(
                       children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.all(2),
-                          padding: EdgeInsets.all(5),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(50),
-                                                    color: Colors.white70
-                                                   ),
-                          child: Row(
-                            children: <Widget>[
-                              Container(
-                                margin: EdgeInsets.fromLTRB(0,0,5,0),
-                                child: Icon(FontAwesome.user,size: 20,)
-                              ),
-                              Expanded(
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  decoration: BoxDecoration(color: Color.fromRGBO(168, 168, 168, 0.5),
-                                    borderRadius: BorderRadius.only(
-                                      bottomRight: Radius.circular(30),
-                                      topRight: Radius.circular(30)
-                                    )
-                                  ),
-                                  child: TextFormField(
-                                    controller: username,
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.all(8),
-                                      hintText: "Username or Email",
-                                      border: UnderlineInputBorder(borderSide: BorderSide.none),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.all(2),
-                          padding: EdgeInsets.all(5),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(50),
-                                                    color: Colors.white70
-                                                   ),
-                          child: Row(
-                            children: <Widget>[
-                              Container(
-                                margin: EdgeInsets.fromLTRB(0,0,5,0),
-                                child: Icon(Icons.vpn_key,size: 20,)
-                              ),
-                              Expanded(
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  decoration: BoxDecoration(color: Color.fromRGBO(168, 168, 168, 0.5),
-                                    borderRadius: BorderRadius.only(
-                                      bottomRight: Radius.circular(30),
-                                      topRight: Radius.circular(30)
-                                    )
-                                  ),
-                                  child: TextFormField(
-                                    obscureText: true,
-                                    controller: password,
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.all(8),
-                                      hintText: "Password",
-                                      border: UnderlineInputBorder(borderSide: BorderSide.none),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        _inputField("Username or Email", text[0],FontAwesome.user,),
+                        _inputField("Password", text[1],FontAwesome.lock),
                         Row(
                           children: <Widget>[
                             Expanded(
                               child: Container(
+                                height: 45,
                                 margin: EdgeInsets.all(5),
                                 child: Material(
                                   color: Colors.orange,
@@ -182,6 +158,7 @@ class LoginPage extends State<Login>{
                             ),
                             Expanded(
                               child: Container(
+                                height: 45,
                                 margin: EdgeInsets.all(5),
                                 child: Material(
                                   color: Colors.green,
@@ -191,7 +168,7 @@ class LoginPage extends State<Login>{
                                     topRight: Radius.circular(30)
                                   ),
                                   child: FlatButton(
-                                    onPressed: ()=>Navigator.popAndPushNamed(context, 'Home'),
+                                    onPressed: _validate,
                                     child: Text("Login",textScaleFactor: 1,),
                                   ),
                                 ),
@@ -199,32 +176,32 @@ class LoginPage extends State<Login>{
                             ),
                           ],
                         ),
-                        Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: Divider(thickness: 1.5,),
-                            ),
-                            Text("   Alternative Account   "),
-                            Expanded(
-                              child: Divider(thickness: 1.5,),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: googleLogin(),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: facebookLogin(),
-                              ),
-                            ],
-                          ),
-                        ),
+                        // Row(
+                        //   children: <Widget>[
+                        //     Expanded(
+                        //       child: Divider(thickness: 1.5,),
+                        //     ),
+                        //     Text("   Alternative Account   "),
+                        //     Expanded(
+                        //       child: Divider(thickness: 1.5,),
+                        //     ),
+                        //   ],
+                        // ),
+                        // Container(
+                        //   child: Row(
+                        //     mainAxisAlignment: MainAxisAlignment.center,
+                        //     children: <Widget>[
+                        //       Padding(
+                        //         padding: const EdgeInsets.all(8.0),
+                        //         child: _googleLogin(),
+                        //       ),
+                        //       Padding(
+                        //         padding: const EdgeInsets.all(8.0),
+                        //         child: _facebookLogin(),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

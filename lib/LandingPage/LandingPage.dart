@@ -152,8 +152,8 @@ class Home extends State<LandingPage> {
       context: context,
       builder: (_) {
         return ShowItemDetail(item: item,quantity: 0,isEdit: false,);
-        }
-      );
+      }
+    );
   }
 
   Widget item(Item item) {

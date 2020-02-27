@@ -1,5 +1,8 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class RegisterUser extends StatefulWidget{
   Register createState() => Register();
@@ -7,18 +10,25 @@ class RegisterUser extends StatefulWidget{
 class Register extends State<RegisterUser>{
   ScrollController _sc = ScrollController();
   List<TextEditingController> text = []; 
-  GlobalKey<FormState> _key;
+  final _key = GlobalKey<FormState>();
   String gender = "Male";
   @override
   initState(){
     super.initState();
-    _key = new GlobalKey<FormState>();
     setState(() {
       for(int i=0;i<10;i++){
         text.add(new TextEditingController());
       }
     });
   }
+  
+  validation(){
+    Navigator.pushNamed(context, 'RegUser1');
+    if(_key.currentState.validate()){
+      _key.currentState.save();
+    }
+  }
+
   Widget _textFormField(String name,int controller,TextInputType type){
     return Container(
       padding: EdgeInsets.all(10),
@@ -32,6 +42,7 @@ class Register extends State<RegisterUser>{
         labelText: name,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(5))
         ),
+      validator: (val) => val.length > 0 ? null : "Invalid "+name,
       ),
     );
   }
@@ -49,8 +60,20 @@ class Register extends State<RegisterUser>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
         title: Text("Register"),
+        actions: <Widget>[
+          Container(
+            margin: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30)
+            ),
+            child: FlatButton(
+              onPressed: validation, 
+              child: Text("Next >>",style: TextStyle(fontSize: 18),)
+            ),
+          )
+        ],
       ),
       body: Center(
         child: SafeArea(
@@ -80,21 +103,102 @@ class Register extends State<RegisterUser>{
                     _textFormField("Birthday dd-mm-yyyy",5,TextInputType.datetime),
                     _textFormField("Email Address",6,TextInputType.emailAddress),
                     _textFormField("Contact No.",7,TextInputType.phone),
-                    Container(
-                      padding: EdgeInsets.all(10),
-                      width: MediaQuery.of(context).size.width,
-                      child: RaisedButton(
-                        elevation: 5,
-                        child: Text("Register"),
-                        onPressed: (){},
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class Register2 extends StatefulWidget {
+  @override
+  _Register2State createState() => _Register2State();
+}
+
+class _Register2State extends State<Register2> {
+  File image;
+
+  getPicture(source) async {
+    Navigator.pop(context);
+    var imageFile = await ImagePicker.pickImage(source: source);
+    setState(() {
+      image = imageFile != null ? imageFile : null;
+    });
+  }
+
+  Future<bool> selectVia(){
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          buttonPadding: EdgeInsets.all(0),
+          title: Text("Choose "),
+          elevation: 50,
+          content: Container(
+            height: MediaQuery.of(context).size.height * .2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: (){getPicture(ImageSource.gallery);},
+                  child: Text("       Gallery      "),
+                ),
+                Row(children: <Widget>[
+                  Expanded(child: Divider()),
+                  Text("or"),
+                  Expanded(child: Divider()),
+                ]),
+                RaisedButton(
+                  onPressed: (){getPicture(ImageSource.gallery);},
+                  child: Text("Take A Photo"),
+                ),
+              ]
+            )
+          ),
+        );
+      }
+    );
+  }
+
+  Widget profilePicture(size){
+    return image == null ? Icon(FontAwesome.user,size: size.width*.5,)
+                  : Image.file(image,fit: BoxFit.fill,);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Set Profile")
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.all(10),
+              height: size.height*.30,
+              width: size.width*.5,
+              decoration: BoxDecoration(
+                border: Border.all()
+              ),
+              child: FlatButton(
+                padding: EdgeInsets.all(1),
+                onPressed: (){selectVia();}, 
+                child: profilePicture(size)
+              ),
+            ),
+            RaisedButton(
+              onPressed: (){selectVia();},
+              child: Text("Profile Picture"),
+            )
+          ],
+        )
       ),
     );
   }
