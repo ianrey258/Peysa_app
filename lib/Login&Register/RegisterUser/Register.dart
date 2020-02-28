@@ -121,12 +121,14 @@ class Register2 extends StatefulWidget {
 
 class _Register2State extends State<Register2> {
   File image;
+  String _textbutton = "Skip";
 
   getPicture(source) async {
     Navigator.pop(context);
     var imageFile = await ImagePicker.pickImage(source: source);
     setState(() {
       image = imageFile != null ? imageFile : null;
+      _textbutton = "Register";
     });
   }
 
@@ -174,7 +176,23 @@ class _Register2State extends State<Register2> {
     var size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Set Profile")
+        title: Text("Set Profile"),
+        actions: <Widget>[
+          Container(
+            margin: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30)
+            ),
+            child: FlatButton(
+              onPressed: (){
+                Navigator.pop(context);
+                Navigator.pop(context);
+              }, 
+              child: Text(""+_textbutton,style: TextStyle(fontSize: 18),)
+            ),
+          )
+        ],
       ),
       body: Center(
         child: Column(

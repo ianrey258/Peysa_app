@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:pyesa_app/Models/Item.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'dart:math';
 
 class RequestItem extends StatefulWidget{
   RequestItemstate createState() => RequestItemstate();
@@ -35,6 +35,42 @@ class RequestItemstate extends State<RequestItem>{
     );
   }
 
+  Widget requestedItem(){
+    return ListTile(
+      contentPadding: EdgeInsets.only(bottom: 5,left: 5,right: 5),
+      leading: Image.asset(Itemimg.getImage()[0].itemImg),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Text("Vergar Dagondon")
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Text("Date: 07/12/2019",style: TextStyle(fontSize: 13),)
+          )
+        ],
+      ),
+      subtitle: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Text("Budget P300")
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Text("Status: Open",style: TextStyle(fontSize: 13),)
+          )
+        ],
+      ),
+      onTap: (){},
+    );
+  }
+
+
+
   Future<bool> requestDialog(){
     return showDialog(
       context: context,
@@ -43,35 +79,74 @@ class RequestItemstate extends State<RequestItem>{
   }
 
    Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: <Widget>[
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text("Request Item"),
-              ),
-            ),
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: Icon(FontAwesome.eye), 
-                  onPressed: requestDialog
+    return DefaultTabController(
+      length: 2,
+      initialIndex: 0,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: <Widget>[
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Request Item"),
                 ),
               ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(FontAwesome.eye), 
+                    onPressed: requestDialog
+                  ),
+                ),
+              ),
+            ],
+          ),
+          bottom: TabBar(
+            labelColor: Colors.blueAccent,
+            unselectedLabelColor: Colors.grey,
+            indicator: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+              ),
+              color: Colors.white,
             ),
-          ],
+            tabs: <Widget>[
+              Tab(
+                text: "My Request",
+              ),
+              Tab(
+                text: "Other Request",
+              ),
+            ],
+          ),
         ),
-      ),
-      body: ListView(
-        controller: _sc,
-        children: <Widget>[
-          requestItem(),
-          requestItem(),
-          requestItem(),
-        ],
+        body: TabBarView(
+          children: [
+            Container(
+              child: ListView(
+                controller: _sc,
+                children: <Widget>[
+                  requestItem(),
+                  requestItem(),
+                  requestItem(),
+                ],
+              ),
+            ),
+            Container(
+              child: ListView(
+                controller: _sc,
+                children: <Widget>[
+                  requestedItem(),
+                  requestedItem(),
+                  requestedItem(),
+                ],
+              ),
+            ),
+          ]
+        )
       ),
     );
   }
@@ -261,6 +336,7 @@ class _BiddingState extends State<Bidding> {
 
   Widget bidItemDetail(){
     return Container(
+      margin: EdgeInsets.only(left:5,right:5),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -286,15 +362,21 @@ class _BiddingState extends State<Bidding> {
     );
   }
 
-  Widget bidders(){
+  Widget bidders(name,price){
+    var r = Random().nextInt(255);
+    var g = Random().nextInt(255);
+    var b = Random().nextInt(255);
+    var color = Color.fromRGBO(r, g, b, 1);
     return ListTile(
       contentPadding: EdgeInsets.all(5),
       leading: CircleAvatar(
         radius: 30,
-        child: Text("I"),
-        backgroundColor: Colors.red,
+        child: Text(""+name[0],style: TextStyle(color: Colors.white),),
+        backgroundColor: color,
       ),
-      onTap: (){Navigator.pushNamed(context, "BidChat");},
+      title: Text(name),
+      subtitle: Text("Item Price: P"+price.toString()),
+      onTap: (){Navigator.pushNamed(context, "BidChat",arguments: BidChat(name: name,color: color));},
     );
   }
 
@@ -308,8 +390,8 @@ class _BiddingState extends State<Bidding> {
           itemImages(),
           bidItemDetail(),
           Divider(),
-          bidders(),
-          bidders()
+          bidders("Vegar Dagondon",500),
+          bidders("Desoyo Geronimo",450)
         ],
       ),
     );
@@ -317,6 +399,9 @@ class _BiddingState extends State<Bidding> {
 }
 
 class BidChat extends StatefulWidget {
+  final String name;
+  final Color color;
+  BidChat({Key key,this.name,this.color}) : super(key: key);
   @override
   _BidChatState createState() => _BidChatState();
 }
@@ -325,13 +410,14 @@ class _BidChatState extends State<BidChat> {
   ScrollController _sc;
   TextEditingController text = TextEditingController();
   List<Widget> conversation =[];
+  String _name = "";
+  Color _color;
+  bool init = true;
 
   @override
   initState(){
     super.initState();
     setState(() {
-      conversation.add(other("Hi!"));
-      conversation.add(you("Low"));
     });
   }
 
@@ -343,7 +429,7 @@ class _BidChatState extends State<BidChat> {
           padding: EdgeInsets.all(10),
           margin: EdgeInsets.all(5),
           decoration: BoxDecoration(
-            color: Colors.red,
+            color: _color,
             borderRadius: BorderRadius.circular(30)
           ),
           child: Text(text),
@@ -370,6 +456,7 @@ class _BidChatState extends State<BidChat> {
   }
 
   List<Widget> conversationDisplay(){
+    print(conversation.length);
     return conversation;
   }
 
@@ -404,30 +491,47 @@ class _BidChatState extends State<BidChat> {
     );
   }
 
+  setData(argu){
+    setState(() {
+      _name = argu.name;
+      _color = argu.color;
+      conversation.add(other("Hi!"));
+      conversation.add(you("Low"));
+      init = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final BidChat argu = ModalRoute.of(context).settings.arguments;
+    init ? setData(argu):null;
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text(_name),
+      ),
       body: Container(
         height: MediaQuery.of(context).size.height,
         child: Column(
           children: <Widget>[
             Expanded(
-              child: SingleChildScrollView(
-                controller: _sc,
-                child: Container(
-                  height: MediaQuery.of(context).size.height*.8,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: conversationDisplay(),
-                  ),
+              child: Container(
+                height: MediaQuery.of(context).size.height*.8,
+                child: ListView.builder(
+                  controller: _sc,
+                  reverse: true,
+                  itemCount: 1,
+                  itemBuilder: (context,item){
+                    return Column(
+                      children: conversationDisplay(),
+                    );
+                  },
                 )
               )
             ),
             inputText()
           ],
         ),
-      )
+      ),
     );
   }
 }

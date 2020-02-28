@@ -15,7 +15,6 @@ class MyStore extends StatefulWidget {
 
 class MyStorestate extends State<MyStore> {
   ScrollController _sc;
-  //TabController _tb;
   GlobalKey<FormState> _key;
   List<TextEditingController> text = [];
 
@@ -192,7 +191,7 @@ class MyStorestate extends State<MyStore> {
               (context, index) {
                 return RaisedButton(
                     padding: EdgeInsets.all(1),
-                    onPressed: () {},
+                    onPressed: (){},
                     child: Column(
                       children: <Widget>[
                         Expanded(
@@ -217,6 +216,85 @@ class MyStorestate extends State<MyStore> {
     );
   }
 }
+
+class RegisterItem extends StatefulWidget {
+  final File picture;
+
+  RegisterItem({Key key,this.picture}) : super(key: key);
+  @override
+  _RegisterItemState createState() => _RegisterItemState();
+}
+
+class _RegisterItemState extends State<RegisterItem> {
+  ScrollController _sc;
+  List<TextEditingController> text;
+  GlobalKey<FormState> _key;
+  File image;
+
+  @override
+  void initState() {
+    super.initState();
+    image = widget.picture;
+    text = [];
+    for(int i = 0; i < 10; i++){
+      text.add(TextEditingController());
+    }
+  }
+
+  Widget inputField(textlabel,controller,keyboardType){
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(labelText: textlabel),
+    );
+  }
+  Widget imageView(){
+    return image != null ? Image.file(image,width: 200,height: 200,) : Text("No Image");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("Register Item"),
+      content: SingleChildScrollView(
+        controller: _sc,
+        child: Form(
+          key: _key,
+          child: Column(
+            children: <Widget>[
+              Center(
+                child: FlatButton(
+                  padding: EdgeInsets.all(0),
+                  child: imageView(), 
+                  onPressed: (){}
+                )
+              ),
+              inputField("Name Item",text[0],TextInputType.text),
+              inputField("Qty of Stock",text[1],TextInputType.number),
+              inputField("Price", text[2], TextInputType.number),
+              inputField("Description", text[3], TextInputType.text),
+              inputField("Category", text[4], TextInputType.text),
+              inputField("Tag", text[5], TextInputType.text),
+            ]
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        Align(
+          alignment: Alignment.bottomRight,
+          child: FlatButton(
+            textColor: Colors.black,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("Add"),
+          ),
+        )
+      ],
+    );
+  }
+}
+
 class OtherStore extends StatefulWidget {
   final int id;
   OtherStore({Key key,this.id}):super(key: key);
@@ -269,7 +347,7 @@ class OtherStoreState extends State<OtherStore> {
     );
   }
 
-  Widget build(_) {
+  Widget build(BuildContext context) {
     final OtherStore argu = ModalRoute.of(context).settings.arguments;
     setStore(argu.id);
     var size = MediaQuery.of(context).size;
@@ -326,81 +404,4 @@ class OtherStoreState extends State<OtherStore> {
   }
 }
 
-class RegisterItem extends StatefulWidget {
-  final File picture;
 
-  RegisterItem({Key key,this.picture}) : super(key: key);
-  @override
-  _RegisterItemState createState() => _RegisterItemState();
-}
-
-class _RegisterItemState extends State<RegisterItem> {
-  ScrollController _sc;
-  List<TextEditingController> text;
-  GlobalKey<FormState> _key;
-  File image;
-
-  @override
-  void initState() {
-    super.initState();
-    image = widget.picture;
-    text = [];
-    for(int i = 0; i < 10; i++){
-      text.add(TextEditingController());
-    }
-  }
-
-  Widget inputField(textlabel,controller,keyboardType){
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(labelText: textlabel),
-    );
-  }
-  Widget imageView(){
-    return image != null ? Image.file(image,width: 200,height: 200,) : Text("No Image");
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text("Register Item"),
-      content: SingleChildScrollView(
-        controller: _sc,
-        child: Form(
-          key: _key,
-          child: Column(
-            children: <Widget>[
-              Center(
-                child: FlatButton(
-                  padding: EdgeInsets.all(0),
-                  child: imageView(), 
-                  onPressed: (){}
-                )
-              ),
-              inputField("Name Item",text[0],TextInputType.text),
-              inputField("Qty of Stock",text[1],TextInputType.number),
-              inputField("Price", text[2], TextInputType.number),
-              inputField("Description", text[3], TextInputType.text),
-              inputField("Category", text[4], TextInputType.text),
-              inputField("Tag", text[5], TextInputType.text),
-            ]
-          ),
-        ),
-      ),
-      actions: <Widget>[
-        Align(
-          alignment: Alignment.bottomRight,
-          child: FlatButton(
-            textColor: Colors.black,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text("Add"),
-          ),
-        )
-      ],
-    );
-  }
-}

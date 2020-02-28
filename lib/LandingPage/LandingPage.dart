@@ -249,7 +249,9 @@ class Home extends State<LandingPage> {
                     fillColor: Color.fromRGBO(255, 255, 255, 1),
                     filled: true,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8))),
+                      borderRadius: BorderRadius.circular(8)
+                    )
+                ),
               ),
             ),
             IconButton(
