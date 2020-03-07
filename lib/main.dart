@@ -9,11 +9,20 @@ import 'package:pyesa_app/LandingPage/Store.dart';
 import 'package:pyesa_app/LandingPage/Cart.dart';
 import 'package:pyesa_app/Login&Register/Login.dart';
 import 'package:pyesa_app/Login&Register/RegisterUser/Register.dart';
+import 'package:pyesa_app/Controller/Controller.dart';
 
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  String _intialRoute;
+  MyApp(){
+    WidgetsFlutterBinding.ensureInitialized();
+    checkSession();
+  }
+  checkSession() async {
+    _intialRoute = await SharedPref.isLogin() ? 'Home' : '/';
+  }
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,17 +31,20 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/',
+      initialRoute: _intialRoute,
       routes: <String ,WidgetBuilder>{
         '/' : (BuildContext context) => Login(),
         'RegUser' : (BuildContext context) => RegisterUser(),
         'RegUser1' : (BuildContext context) => Register2(),
+        'StoreRegister' : (BuildContext context) => StoreRegister(),
         'Home' : (BuildContext context) => LandingPage(),
         'RatingReview' : (BuildContext context) => RatingReviews(),
         'Notification' : (BuildContext context) => Notifications(),
         'Account' : (BuildContext context) => Account(),
+        'EditProfile' : (BuildContext context) => EditProfile(),
         'Purchases' : (BuildContext context) => Purchases(),
         'MyStore' : (BuildContext context) => MyStore(),
+        'EditStore' : (BuildContext context) => EditStoreDetail(),
         'OtherStore' : (BuildContext context) => OtherStore(),
         'Cart' : (BuildContext context) => Cart(),
         'RequestItem' : (BuildContext context) => RequestItem(),

@@ -9,6 +9,8 @@ import 'package:pyesa_app/LandingPage/Store.dart';
 import 'package:pyesa_app/Models/Store.dart';
 import 'package:pyesa_app/Models/Item.dart';
 import 'dart:math';
+import 'package:pyesa_app/Controller/Controller.dart';
+import 'package:pyesa_app/Models/User.dart';
 
 class LandingPage extends StatefulWidget {
   Home createState() => Home();
@@ -23,6 +25,7 @@ class Home extends State<LandingPage> {
   initState() {
     super.initState();
   }
+
 
   getPermission() async {
     final GeolocationResult result =
@@ -61,89 +64,118 @@ class Home extends State<LandingPage> {
     );
   }
 
+  profileImage() {
+    return FutureBuilder(
+      future: ImageController.getUserImage(),
+      builder: (context,snapshot) {
+        if(snapshot.connectionState == ConnectionState.done){
+          return snapshot.hasData && snapshot.data['filename'] != 'null' ? Image.network(ImageController.getUserNetImage(snapshot.data['filename']),fit: BoxFit.cover,width: 120,height: 120):
+           Icon(FontAwesome.user_circle_o,size: 120,);
+        }
+        return Icon(FontAwesome.user_circle_o,size: 120,);
+      }
+    );
+  }
+
   Widget drawerButton(name,index,destination,icon){
     return ListTile(
       leading: Icon(icon),
-      title: Text(
-        name,
-        style: TextStyle(fontSize: 20),
-      ),
-      onTap: () {
-        Navigator.pushNamed(context, destination);
-      },
+      title: Text(name,style: TextStyle(fontSize: 20),),
+      onTap: () => Navigator.pushNamed(context, destination),
+    );
+  }
+  showDetailAccount(){
+    return FutureBuilder(
+      future: DataController.getUserAccount(),
+      builder: (context,snapshot){
+        if(snapshot.connectionState == ConnectionState.done){
+          if(snapshot.hasData){
+            return Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                snapshot.data['firstname']+" "+snapshot.data['lastname'],
+                style: TextStyle(fontSize: 15),
+              )
+            );
+          }
+          return Container(width: 0.0, height: 0.0);
+        }
+        return Container(width: 0.0, height: 0.0);
+      }
     );
   }
 
   Widget _drawer() {
-    return Drawer(
-      child: Column(
-        children: <Widget>[
-          Container(
-            margin: EdgeInsets.only(top: 0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(80),
-                  topLeft: Radius.circular(80)),
-              color: Colors.blue,
-            ),
-            child: DrawerHeader(
-              padding: EdgeInsets.fromLTRB(15, 0, 5, 20),
-              margin: EdgeInsets.all(0),
-              child: Row(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.center,
-                    child: CircleAvatar(
-                      radius: 65,
-                      backgroundColor: Colors.white,
-                      backgroundImage:
-                          AssetImage("assets/Profile/UserProfile.jpg"),
-                    ),
-                  ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: Text(
-                        "Marvin Bonani",
-                        style: TextStyle(fontSize: 15),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            height: MediaQuery.of(context).size.height * .65,
-            child: ListView(
-              padding: EdgeInsets.all(0),
-              controller: _sc,
+    return FutureBuilder(
+      future: DataController.getUserAccount(),
+      builder: (context,data){
+        if(data.connectionState == ConnectionState.done){
+          return Drawer(
+            child: Column(
               children: <Widget>[
-                drawerButton("Rating & Review", 0, 'RatingReview',FontAwesome.star),
-                drawerButton("Notifcation", 1, 'Notification', FontAwesome.bell),
-                drawerButton("Account", 2, 'Account', FontAwesome.user),
-                drawerButton("Purchases", 3, "Purchases", FontAwesome.product_hunt),
-                drawerButton("Store", 4, "MyStore", FontAwesome5Solid.store),
-                drawerButton("Request Spare Parts", 5, "RequestItem", FontAwesome.eye),
-                ListTile(
-                  leading: Icon(FontAwesome.sign_out),
-                  title: Text(
-                    "Logout",
-                    style: TextStyle(fontSize: 20, color: Colors.red),
+                Container(
+                  margin: EdgeInsets.only(top: 0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(80),
+                        topLeft: Radius.circular(80)),
+                    color: Colors.blue,
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.popAndPushNamed(
-                      context,
-                      '/',
-                    );
-                  },
+                  child: DrawerHeader(
+                    padding: EdgeInsets.fromLTRB(15, 0, 5, 20),
+                    margin: EdgeInsets.all(0),
+                    child: Row(
+                      children: <Widget>[
+                        Align(
+                          alignment: Alignment.center,
+                          child: CircleAvatar(
+                            radius: 65,
+                            backgroundColor: Colors.white,
+                            child: ClipOval(
+                              child: profileImage(),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: showDetailAccount(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+                Container(
+                  height: MediaQuery.of(context).size.height * .65,
+                  child: ListView(
+                    padding: EdgeInsets.all(0),
+                    controller: _sc,
+                    children: <Widget>[
+                      drawerButton("Rating & Review", 0, 'RatingReview',FontAwesome.star),
+                      drawerButton("Notifcation", 1, 'Notification', FontAwesome.bell),
+                      drawerButton("Account", 2, 'Account', FontAwesome.user),
+                      drawerButton("Purchases", 3, "Purchases", FontAwesome.product_hunt),
+                      drawerButton("Store", 4, "MyStore", FontAwesome5Solid.store),
+                      drawerButton("Request Spare Parts", 5, "RequestItem", FontAwesome.eye),
+                      ListTile(
+                        leading: Icon(FontAwesome.sign_out),
+                        title: Text(
+                          "Logout",
+                          style: TextStyle(fontSize: 20, color: Colors.red),
+                        ),
+                        onTap: () async {
+                          await HpController.logout();
+                          Navigator.pop(context);
+                          Navigator.popAndPushNamed(context,'/',);
+                        },
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
-          )
-        ],
-      ),
+          );
+        }
+        return Container();
+      }
     );
   }
 
@@ -195,13 +227,13 @@ class Home extends State<LandingPage> {
             FlatButton(
                 textColor: Colors.black,
                 onPressed: () {
-                  Navigator.pushNamed(context, 'OtherStore',arguments: OtherStore(id: store.id));
+                  //Navigator.pushNamed(context, 'OtherStore',arguments: OtherStore(id: store.id));
                 },
                 child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: <Widget>[
                       Image.asset(
-                        store.images[0].images,
+                        'assets/Store/StoreProfile.jpg',
                         fit: BoxFit.fill,
                         width: 30,
                         height: 30,
@@ -288,11 +320,16 @@ class Home extends State<LandingPage> {
               child: ListView(
                 padding: EdgeInsets.all(0),
                 children: <Widget>[
-                  store(Store.getListStore()[0], "50m Away"),
-                  store(Store.getListStore()[1], "100m Away"),
-                  store(Store.getListStore()[2], "120m Away"),
-                  store(Store.getListStore()[3], "180m Away"),
-                  store(Store.getListStore()[4], "200m Away"),
+                  // Divider(),
+                  // store(Store.getListStore()[0], "50m Away"),
+                  // Divider(),
+                  // store(Store.getListStore()[1], "100m Away"),
+                  // Divider(),
+                  // store(Store.getListStore()[2], "120m Away"),
+                  // Divider(),
+                  // store(Store.getListStore()[3], "180m Away"),
+                  // Divider(),
+                  // store(Store.getListStore()[4], "200m Away"),
                 ],
               ),
             ),
@@ -466,7 +503,7 @@ class StateFilterDialog extends State<FilterDialog> {
 class ShowItemDetail extends StatefulWidget {
   final Item item;
   final int quantity;
-  @required bool isEdit = false;
+  final bool isEdit;
   ShowItemDetail({Key key, this.item,this.quantity,this.isEdit}) : super (key: key);
 
   ShowItemDetailstate createState() => ShowItemDetailstate();

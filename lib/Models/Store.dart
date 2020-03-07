@@ -1,28 +1,55 @@
 class Store{
-  int id;
-  String storeName,storeInfo,storeAddress,storeRating,storeFollowers,storeVisited;
-  List<StoreImage> images;
+  String id,storeName,accountId,storeInfo,storeAddress,storeRating,storeFollowers,storeVisited,storeStatus;
   
   Store({this.id,
+         this.accountId,
          this.storeName,
          this.storeAddress,
          this.storeFollowers,
          this.storeInfo,
          this.storeRating,
          this.storeVisited,
-         this.images
+         this.storeStatus
         });
-  
-  static List<Store> getListStore(){
-    return <Store>[
-      Store(id:1,storeName: "Store 1",storeInfo: "asdasdasdasd",storeAddress: "asdasdasd",storeFollowers: "25",storeRating: "4.5",storeVisited: "25",images: StoreImage.getImages()),
-      Store(id:2,storeName: "Store 2",storeInfo: "asdasdasdasd",storeAddress: "asdasdasd",storeFollowers: "132",storeRating: "4.0",storeVisited: "15",images: StoreImage.getImages()),
-      Store(id:3,storeName: "Store 3",storeInfo: "asdasdasdasd",storeAddress: "asdasdasd",storeFollowers: "112",storeRating: "4.1",storeVisited: "26",images: StoreImage.getImages()),
-      Store(id:4,storeName: "Store 4",storeInfo: "asdasdasdasd",storeAddress: "asdasdasd",storeFollowers: "23",storeRating: "3.0",storeVisited: "3",images: StoreImage.getImages()),
-      Store(id:5,storeName: "Store 5",storeInfo: "asdasdasdasd",storeAddress: "asdasdasd",storeFollowers: "117",storeRating: "4.6",storeVisited: "28",images: StoreImage.getImages()),
-      Store(id:6,storeName: "Store 6",storeInfo: "asdasdasdasd",storeAddress: "asdasdasd",storeFollowers: "56",storeRating: "3.9",storeVisited: "6",images: StoreImage.getImages()),
-    ];
-  } 
+
+  static toObject(Map<String,dynamic> map){
+    return Store(
+      id: map['id'],
+      accountId: map['accountId'],
+      storeName: map['storeName'],
+      storeInfo: map['storeInfo'],
+      storeAddress: map['storeAddress'],
+      storeFollowers: map['storeFollowers'],
+      storeRating: map['storeRating'],
+      storeVisited: map['storeVisited'],
+      storeStatus: map['storeStatus'],
+    );
+  }
+
+  Map<String,dynamic> toMapWid(){
+    return {
+      'id':id,
+      'accountId':accountId,
+      'storeName':storeName,
+      'storeInfo':storeInfo,
+      'storeAddress':storeAddress,
+      'storeFollowers':storeFollowers,
+      'storeVisited':storeVisited,
+      'storeStatus':storeStatus,
+    };
+  }
+
+  Map<String,dynamic> toMapWOid(){
+    return {
+      'accountId':accountId,
+      'storeName':storeName,
+      'storeInfo':storeInfo,
+      'storeAddress':storeAddress,
+      'storeFollowers':storeFollowers,
+      'storeVisited':storeVisited,
+      'storeStatus':storeStatus,
+    };
+  }
 }
 
 class StoreImage{
@@ -34,5 +61,37 @@ class StoreImage{
     return <StoreImage>[
       StoreImage(id: 1,images: 'assets/Store/StoreProfile.jpg'),
     ];
+  }
+}
+
+class GioLocation{
+  String id,storeId,longitude,latitude;
+
+  GioLocation({this.id,this.latitude,this.longitude,this.storeId});
+
+  static toOject(Map<String,dynamic> map){
+    return GioLocation(
+      id: map['id'],
+      longitude: map['longitude'],
+      latitude: map['latitude'],
+      storeId: map['storeId']
+    );
+  }
+
+  Map<String,dynamic> toMapWid(){
+    return {
+      'id':id,
+      'longitude':longitude,
+      'latitude':latitude,
+      'storeId':storeId,
+    };
+  }
+
+  Map<String,dynamic> toMapWOid(){
+    return {
+      'longitude':longitude,
+      'latitude':latitude,
+      'storeId':storeId,
+    };
   }
 }

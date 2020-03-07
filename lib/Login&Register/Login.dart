@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:toast/toast.dart';
+import 'package:pyesa_app/Controller/Controller.dart';
 
 class Login extends StatefulWidget{
   LoginPage createState() => new LoginPage();
@@ -21,10 +24,21 @@ class LoginPage extends State<Login>{
     }
   }
 
-  _validate(){
+  _validate() async {
     if(_key.currentState.validate()){
       _key.currentState.save();
-      Navigator.popAndPushNamed(context, 'Home');
+      LoadingScreen.showLoading(context, 'Loggin in ...');
+      Map result = await HpController.loginUser(text);
+      if(result[1].isNotEmpty){
+        Timer(Duration(seconds: 1), (){
+          Navigator.pop(context);
+          Navigator.popAndPushNamed(context, 'Home');
+        });
+      } else {
+        Navigator.pop(context);
+        Toast.show(result[0]['result'], context,duration: 3,gravity: Toast.BOTTOM);
+      }
+      print(result);
     }
   }
 
@@ -134,7 +148,7 @@ class LoginPage extends State<Login>{
                     key: _key,
                     child: Column(
                       children: <Widget>[
-                        _inputField("Username or Email", text[0],FontAwesome.user,),
+                        _inputField("Username", text[0],FontAwesome.user,),
                         _inputField("Password", text[1],FontAwesome.lock),
                         Row(
                           children: <Widget>[

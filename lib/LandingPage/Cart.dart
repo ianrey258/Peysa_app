@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:pyesa_app/Models/Item.dart';
 import 'package:pyesa_app/LandingPage/LandingPage.dart';
-import 'package:pyesa_app/Models/Item.dart';
 
 class Cart extends StatefulWidget{
   CartState createState() => CartState();
