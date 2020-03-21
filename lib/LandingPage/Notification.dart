@@ -1,11 +1,110 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:pyesa_app/Controller/Controller.dart';
+import 'package:pyesa_app/Models/User.dart';
 
 class Notifications extends StatefulWidget{
   Notificationstate createState() => Notificationstate();
 }
 class Notificationstate extends State<Notifications>{
   ScrollController _sc;
+  List<Map> notificationType = [];
+
+  @override
+  void initState(){
+    super.initState();
+    initNotType();
+  }
+
+  void initNotType() async {
+    notificationType = await DataController.getNotificationType();
+  }
+
+  void notBtn(UserNotification data) async {
+    data.status = '9';
+    if(notificationType[0]['id'] == data.notificationType){
+      Navigator.popAndPushNamed(context, 'Bidding');
+    } else if(notificationType[1]['id'].toString() == data.notificationType){
+      Navigator.popAndPushNamed(context, 'MyStore');
+    } else if(notificationType[2]['id'] == data.notificationType){
+      Navigator.popAndPushNamed(context, 'Purchases');
+    } else if(notificationType[3]['id'] == data.notificationType){
+      Navigator.popAndPushNamed(context, 'Bidding');
+    } else if(notificationType[4]['id'] == data.notificationType){
+      return null;
+    }
+    await DataController.updateNotification(data.toMapWid());
+  }
+
+  Widget notificationContainer(UserNotification data){
+    var title = '';
+    notificationType.forEach((element){if(element['id'] == data.notificationType){title = element['notificationType'];}});
+    var color = data.status != '9' ? Colors.black12 : Colors.white;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.blue)),
+        color: color
+      ),
+      child: ListTile(
+        onTap: (){notBtn(data);},
+        title: Row(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(title),
+            ),
+            Expanded(
+              child: Container(),
+            ),
+            Align(
+              alignment: Alignment.topRight,
+              child: Text(data.dateRecieved),
+            ),
+          ],
+        ),
+        subtitle: Column(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(data.message)
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Text("Click for details",
+                style: TextStyle(
+                  fontSize: 10
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+  
+
+  Widget notification(){
+    return FutureBuilder<List>(
+      future: DataController.getNotification(),
+      builder: (_,result){
+        if(result.connectionState == ConnectionState.done){
+          if(result.hasData){
+            return ListView.builder(
+              reverse: true,
+              controller: _sc,
+              itemCount: result.data.length,
+              itemBuilder: (_,i){
+                return notificationContainer(UserNotification.toObect(result.data[i]));
+              }
+            );
+          }
+          return Container();
+        }
+        return Container();
+      },
+    );
+  }
+
 
   Widget build(BuildContext context){
     return Scaffold(
@@ -13,103 +112,7 @@ class Notificationstate extends State<Notifications>{
         backgroundColor: Colors.blueAccent,
         title: Text("Notification"),
       ),
-      body: ListView(
-        controller: _sc,
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.blue))),
-            child: ListTile(
-              onTap: (){},
-              title: Text("New Store"),
-              subtitle: Column(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Congratulations! You can now Sell your Scrap Things Using this App.')
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text("Click for details",
-                      style: TextStyle(
-                        fontSize: 10
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.blue))),
-            child: ListTile(
-              onTap: (){},
-              title: Text("New Store"),
-              subtitle: Column(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('There is new Store Nearby.')
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text("Click for details",
-                      style: TextStyle(
-                        fontSize: 10
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.blue))),
-            child: ListTile(
-              onTap: (){},
-              title: Text("Request Item"),
-              subtitle: Column(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Marvin Bonani Requested an item.')
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text("Click for details",
-                      style: TextStyle(
-                        fontSize: 10
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color:Colors.blue))),
-            child: ListTile(
-              onTap: (){},
-              title: Text("Reserve Item"),
-              subtitle: Column(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Vergar Dagondon Cash an item via Online Payment')
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text("Click for details",
-                      style: TextStyle(
-                        fontSize: 10
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: notification()
     );
   }
 

@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:image_picker/image_picker.dart';
@@ -270,9 +272,12 @@ class _StoreRegisterState extends State<StoreRegister> {
     }
   }
 
-  getPicture(source){
-    tinFile.filename = Random().nextInt(1000000).toString()+'.jpg';
-    tinFile.binaryfile = Random().nextInt(1000000).toString();
+  getPicture(source) async {
+    File image = await ImagePicker.pickImage(source: source);
+    if(image != null){
+      tinFile.filename = Random().nextInt(1000000).toString()+'_'+image.path.split('/').last;
+      tinFile.binaryfile = base64Encode(image.readAsBytesSync());
+    }
     Navigator.pop(context);
   }
 
@@ -284,7 +289,6 @@ class _StoreRegisterState extends State<StoreRegister> {
     if(result){
       await LoadingScreen.showResultDialog(context, "Form Submitted", 25);
       Navigator.pop(context);
-      Navigator.popAndPushNamed(context, 'MyStore');
     } else {
       await LoadingScreen.showResultDialog(context, "Data Sumbitting Fail", 20);
       Navigator.pop(context);
@@ -300,6 +304,7 @@ class _StoreRegisterState extends State<StoreRegister> {
           content: Container(
             height: MediaQuery.of(context).size.height*.2,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 RaisedButton(
                   onPressed: (){getPicture(ImageSource.gallery);},

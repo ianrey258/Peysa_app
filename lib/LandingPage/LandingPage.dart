@@ -20,12 +20,18 @@ class Home extends State<LandingPage> {
   TextEditingController _search = TextEditingController();
   ScrollController _sc = ScrollController();
   MapController _mapController = MapController();
+  bool refresh = true;
 
   @override
   initState() {
     super.initState();
   }
 
+  void refreshState(){
+    setState(() {
+      refresh = !refresh;
+    });
+  }
 
   getPermission() async {
     final GeolocationResult result =
@@ -77,14 +83,34 @@ class Home extends State<LandingPage> {
     );
   }
 
+  void storeButton(destination) async {
+    Store store = Store.toObject(await DataController.getStore());
+    if(!await HpController.hasStore()){
+      Navigator.push(context,MaterialPageRoute(builder: (BuildContext context)=>NoStoreYet()));
+    } else {
+      store  =  Store.toObject(await DataController.getStore());
+      if(store.storeStatus == '15'){
+        Navigator.push(context,MaterialPageRoute(builder: (BuildContext context)=>StoreWaiting()));
+      } else if(store.storeStatus == '14'){
+        Navigator.push(context,MaterialPageRoute(builder: (BuildContext context)=>StoreReApprove()));
+      } else {
+        Navigator.pushNamed(context, destination);
+      }
+    }
+  }
+
   Widget drawerButton(name,index,destination,icon){
     return ListTile(
       leading: Icon(icon),
       title: Text(name,style: TextStyle(fontSize: 20),),
-      onTap: () => Navigator.pushNamed(context, destination),
+      onTap: (){
+        destination == "MyStore" ? storeButton(destination) : Navigator.pushNamed(context, destination);
+        refreshState();
+      },
     );
   }
-  showDetailAccount(){
+
+  Widget showDetailAccount(){
     return FutureBuilder(
       future: DataController.getUserAccount(),
       builder: (context,snapshot){

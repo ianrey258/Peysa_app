@@ -17,13 +17,20 @@ class Accountstate extends State<Account>{
   ScrollController _sc;
   UserImage _userImage;
   File _image;
-  bool hasStore = true;
+  bool hasStore = false,refresh = true;
   Store store = Store();
+  String storeBtnTxt = 'Edit';
 
   @override
   initState(){
     super.initState();
     setState(() {
+    });
+  }
+
+  refreshState(){
+    setState(() {
+      refresh = !refresh;
     });
   }
 
@@ -89,7 +96,6 @@ class Accountstate extends State<Account>{
       future: DataController.getLocation(),
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
-          print(result.data);
           if(result.data.isNotEmpty){
             return userinfo('GioLocation', '('+result.data['longitude'] +','+result.data['latitude'] +')');
           }
@@ -113,13 +119,18 @@ class Accountstate extends State<Account>{
                 builder: (context,data2){
                   if(data2.connectionState == ConnectionState.done && data2.hasData){
                     store = Store.toObject(data2.data);
-                    print(store.storeRating);
                     if(store.storeStatus == '15'){
-                      print(store.toMapWid());
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           Text('Your Store has been Process.',style: TextStyle(fontSize: 20))
+                        ],
+                      );
+                    } else if (store.storeStatus == '14') {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text('Your Store has been Pending \nDue to the Form that you Submitted.',style: TextStyle(fontSize: 20),textAlign: TextAlign.center,)
                         ],
                       );
                     } else {
@@ -152,17 +163,6 @@ class Accountstate extends State<Account>{
     );
   }
 
-  storeButton(){
-    if(hasStore){
-      if(store.storeStatus == '15'){
-        return null;
-      }
-      //Navigator.pushNamed(context, 'EditStore');
-    } else{
-      Navigator.pushNamed(context, 'StoreRegister') ;
-    }
-  }
-
   Widget storeInfo(){
     return Card(
       margin: EdgeInsets.all(0),
@@ -179,15 +179,6 @@ class Accountstate extends State<Account>{
                     child: Text('My Store',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
                   ),
                 ),
-                FlatButton(
-                  onPressed: storeButton,
-                  child: Row(
-                    children: <Widget>[
-                      hasStore ? Text('Edit '):Text('Register Here '),
-                      Icon(Icons.edit)
-                    ],
-                  )
-                )
               ],
             ),
             Divider(),
@@ -214,6 +205,7 @@ class Accountstate extends State<Account>{
       await ImageController.savingProfileImage(_userImage.toMapWid(),_userImage.toMapWidUpload());
     }
     Navigator.pop(context);
+    refreshState();
   }
 
   Future<bool> chooseImage(){
@@ -225,6 +217,7 @@ class Accountstate extends State<Account>{
           content: Container(
             height: MediaQuery.of(context).size.height*.2,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 RaisedButton(
                   onPressed: (){getPicture(ImageSource.gallery);},
@@ -249,7 +242,6 @@ class Accountstate extends State<Account>{
       builder: (context,snapshot){
         if(snapshot.connectionState == ConnectionState.done){
           _userImage = UserImage.toObject(snapshot.data);
-          print(_userImage.toMapWidUpload());
           return snapshot.hasData && snapshot.data['filename'] != 'null' ? Image.network(ImageController.getUserNetImage(snapshot.data['filename']),filterQuality: FilterQuality.medium,fit: BoxFit.cover,width: 62,height: 62,):
            Icon(FontAwesome.user_circle_o,size: 65,);
         } else {
@@ -260,11 +252,19 @@ class Accountstate extends State<Account>{
   } 
 
   Widget profileBackground(){
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.blue,
-      ),
-      child: Image.network('http://cdn.urldecoder.org/assets/images/url-fb.png',fit: BoxFit.cover,),
+    return FutureBuilder(
+      future: ImageController.getStoreImages(),
+      builder: (_,result){
+        if(result.connectionState == ConnectionState.done && result.hasData){
+          if(result.data.isNotEmpty){
+            return Container(
+              child: Image.network(ImageController.getStoreNetImage(result.data[0]['filename']),fit: BoxFit.cover),
+            );
+          }
+          return Container(color: Colors.blue,);
+        }
+        return Container();
+      }
     );
   }
 
@@ -277,7 +277,7 @@ class Accountstate extends State<Account>{
           SliverAppBar(
             backgroundColor: Colors.transparent,
             forceElevated: false,
-            expandedHeight: 150,
+            expandedHeight: MediaQuery.of(context).size.height*.2,
             pinned: false,
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: EdgeInsets.all(10),
@@ -377,9 +377,9 @@ class _EditProfileState extends State<EditProfile> {
       LoadingScreen.showLoading(context, "Updating Data");
       await DataController.savingUserData(_user.toMapWid(), _userAccount.toMapWid());
       Navigator.pop(context);
+      await LoadingScreen.showResultDialog(context, 'Data Saved!', 25);
       Navigator.pop(context);
-      Navigator.pop(context);
-      //Navigator.popAndPushNamed(context, 'Account');
+      Navigator.popAndPushNamed(context, 'Account');
     }
   }
 

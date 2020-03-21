@@ -11,12 +11,18 @@ class DbUtil{
   static const Tbl_UserImg = 'user_img';
   static const Tbl_StoreImg = 'store_img';
   static const Tbl_ItemImg = 'item_img';
+  static const Tbl_BidItemImg = 'bidItem_img';
+  static const Tbl_ApprovalImg = 'store_veriification_img';
   static const Tbl_Store = 'store';
   static const Tbl_StoreItem = 'storeitems';
   static const Tbl_Notification = 'notification';
+  static const Tbl_NotificationType = 'notificationtype';
+  static const Tbl_StatusType = 'statustype';
   static const Tbl_ItemCategory = 'item_category';
   static const Tbl_ItemTags = 'item_tags';
   static const Tbl_GioLocation = 'gio_address';
+  static const Tbl_ItemRating = 'item_rating';
+
 
   Future<Database> get database async{
 
@@ -36,9 +42,13 @@ class DbUtil{
       await _db.execute('create table $Tbl_UserImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_StoreImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_ItemImg (id TEXT,parentId TEXT,filename TEXT)');
+      await _db.execute('create table $Tbl_BidItemImg (id TEXT,parentId TEXT,filename TEXT)');
+      await _db.execute('create table $Tbl_ApprovalImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_Store (id TEXT,accountId TEXT,storeName TEXT,storeInfo TEXT,storeAddress TEXT,storeRating TEXT,storeFollowers TEXT,storeVisited TEXT,storeStatus TEXT)');
-      await _db.execute('create table $Tbl_StoreItem (id TEXT,itemName TEXT,itemPrice TEXT,itemDescription TEXT,itemStack TEXT,itemRating TEXT,itemTag TEXT,itemCategory TEXT,topupId TEXT)');
-      await _db.execute('create table $Tbl_Notification (id TEXT,userId TEXT,message TEXT,dateRecieved TEXT,notificationType TEXT,status TEXT)');
+      await _db.execute('create table $Tbl_StoreItem (id TEXT,itemName TEXT,itemPrice TEXT,itemDescription TEXT,itemStack TEXT,itemRating TEXT,tagId TEXT,categoryId TEXT,topupId TEXT)');
+      await _db.execute('create table $Tbl_Notification (id TEXT,userId TEXT,message TEXT,dateRecieved DATE,notificationType TEXT,status TEXT)');
+      await _db.execute('create table $Tbl_NotificationType (id TEXT,notificationType TEXT)');
+      await _db.execute('create table $Tbl_StatusType (id TEXT,statusName TEXT)');
       await _db.execute('create table $Tbl_ItemCategory (id TEXT,categoryName TEXT)');
       await _db.execute('create table $Tbl_ItemTags (id TEXT,tagName TEXT)');
       await _db.execute('create table $Tbl_GioLocation (id TEXT,storeId TEXT,longitude TEXT,latitude TEXT)');
@@ -65,6 +75,11 @@ class DbUtil{
       db.delete('$Tbl_ItemCategory');
       db.delete('$Tbl_ItemTags');
       db.delete('$Tbl_GioLocation');
+      db.delete('$Tbl_ApprovalImg');
+      db.delete('$Tbl_NotificationType');
+      db.delete('$Tbl_StatusType');
+      db.delete('$Tbl_BidItemImg');
+      //db.delete('$Tbl_ItemRating');
     }
   }
 
@@ -103,6 +118,18 @@ class DbAccess{
   static Future<List> getDataList(table) async {
     final db = await _dbUtil.database;
     List listResult = await db.query(table);           
+    return listResult;
+  }
+
+  static Future<List> getDataListWhere(table,where) async {
+    final db = await _dbUtil.database;
+    List listResult = await db.query(table,where: where);           
+    return listResult;
+  }
+
+  static Future<List> getDataListBy(table,by) async {
+    final db = await _dbUtil.database;
+    List listResult = await db.query(table,orderBy: by);           
     return listResult;
   }
 

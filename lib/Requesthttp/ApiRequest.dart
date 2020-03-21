@@ -9,18 +9,14 @@ class RequestUrl{
   }
 }
 
-class PostRequest{
+class ApiRequest{
   static final _baseurl = RequestUrl.baseUrl;
 
   static Future<bool> testConnection() async {
     var client = http.Client();
     try{
        var response = await client.post(_baseurl,body: {});
-       if(response.statusCode == 200){
-         return true;
-       } else {
-         return false;
-       }
+       return response.statusCode == 200 ? true : false;
     } catch(e){
       return false;
     } finally {
@@ -31,7 +27,7 @@ class PostRequest{
   static Future<String> uploadImageProfile(Map<String,dynamic> data) async {
     var client = http.Client();
     try {
-      var response = await client.post(_baseurl+'AccountController/insertUserImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/insertUserImage',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap[0]['id'];
@@ -73,6 +69,7 @@ class PostRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'StoreController/insertStore',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap[0];
@@ -86,9 +83,11 @@ class PostRequest{
   static Future<Map> uploadApprovalImage(Map<String,dynamic> data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'StoreController/insertStoreApprovalImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/insertStoreApprovalImage',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
+      print(datamap);
       return datamap;
     } catch(e) {
       return {};
@@ -114,7 +113,38 @@ class PostRequest{
   static Future<Map> insertStoreImage(Map<String,dynamic> data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'StoreController/insertStoreImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/insertStoreImage',body: data);
+      print(response.body);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } catch(e) {
+      return {};
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> deleteData(Map<String,dynamic> data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'DeleteController/deleteTable',body: data);
+      print(response.body);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } catch(e) {
+      return {};
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> deleteItemImage(Map<String,dynamic> data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/removeItemImage',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -128,7 +158,8 @@ class PostRequest{
   static Future<Map> deleteStoreImage(Map<String,dynamic> data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'StoreController/removeStoreImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/removeStoreImage',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -139,16 +170,12 @@ class PostRequest{
     }
   }
 
-}
-
-class GetRequest{
-  static final _baseurl = RequestUrl.baseUrl;
-
   static Future<Map> loginUser(Map<String,dynamic> data) async {
     var client = http.Client();
     List result = [];
     try{
       var response = await client.post(_baseurl+'AccountController/fetchUser',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       result.add({'result':'Unmatched Username or Password'});
@@ -179,6 +206,7 @@ class GetRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'StoreController/fetchStore',body: data);
+      print(response.body.toString());
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -190,7 +218,7 @@ class GetRequest{
   static Future<Map> getUserImage(data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'AccountController/fetchUserImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/fetchUserImage',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -202,7 +230,7 @@ class GetRequest{
   static Future<Map> getStoreAprovalImage(data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'StoreController/fetchStoreApprovalImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/fetchStoreApprovalImage',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -214,7 +242,7 @@ class GetRequest{
   static Future<Map> getStoreImage(data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'StoreController/fetchStoreImage',body: data);
+      var response = await client.post(_baseurl+'ImageController/fetchStoreImage',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -234,6 +262,164 @@ class GetRequest{
       client.close();
     }
   }
+
+  static Future<Map> getStoreItem(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/fetchStoreItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertItemImage(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/insertItemImage',body: data);
+      print(response.body);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getItemImage(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/fetchItemImage',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getStoreItemImage(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/fetchStoreItemImages',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertItem(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/insertItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertStoreItem(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/insertStoreItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchNotificationType(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'AccountController/fetchNotificationType',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchStatusType(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'AccountController/fetchStatusType',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getCategory(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/fetchCategory',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getTags(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/fetchTags',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getAddress(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/fetchAddress',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> updateNotification(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'AccountController/insertNotification',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getNotification(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'AccountController/fetchNotification',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
 }
 
 

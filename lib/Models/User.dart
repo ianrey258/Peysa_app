@@ -143,3 +143,48 @@ class UserImage{
 
 }
 
+class UserNotification{
+  String id,userId,message,dateRecieved,notificationType,status;
+
+  UserNotification({
+    this.id,
+    this.dateRecieved,
+    this.message,
+    this.notificationType,
+    this.status,
+    this.userId
+  });
+
+  static toObect(Map<String,dynamic> map){
+    return UserNotification(
+      id: map['id'],
+      dateRecieved: map['dateRecieved'],
+      message: map['message'],
+      notificationType: map['notificationType'],
+      status: map['status'],
+      userId: map['userId'],
+    );
+  }
+
+  Map<String,dynamic> toMapWid(){
+    return{
+      'id':id,
+      'dateRecieved':dateRecieved,
+      'message':message,
+      'notificationType':notificationType,
+      'status':status,
+      'userId':userId,
+    };
+  }
+
+  Map<String,dynamic> toMapWOid(){
+    return{
+      'dateRecieved':dateRecieved,
+      'message':message,
+      'notificationType':notificationType,
+      'status':status,
+      'userId':userId,
+    };
+  }
+}
+
