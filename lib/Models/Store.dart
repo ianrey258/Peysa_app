@@ -12,7 +12,7 @@ class Store{
          this.storeStatus
         });
   
-  static toObject(Map<String,dynamic> map){
+  factory Store.toObject(Map<String,dynamic> map){
     return Store(
       id: map['id'],
       accountId: map['accountId'],
@@ -52,24 +52,12 @@ class Store{
   }
 }
 
-class StoreImage{
-  int id;
-  String images;
-  StoreImage({this.id,this.images});
-
-  static List<StoreImage> getImages(){
-    return <StoreImage>[
-      StoreImage(id: 1,images: 'assets/Store/StoreProfile.jpg'),
-    ];
-  }
-}
-
 class GioLocation{
   String id,storeId,longitude,latitude;
 
   GioLocation({this.id,this.latitude,this.longitude,this.storeId});
 
-  static toOject(Map<String,dynamic> map){
+  factory GioLocation.toOject(Map<String,dynamic> map){
     return GioLocation(
       id: map['id'],
       longitude: map['longitude'],
@@ -112,7 +100,7 @@ class StoreItem{
     this.topupId,
   });
 
-  static toObject(Map<String,dynamic> map){
+  factory StoreItem.toObject(Map<String,dynamic> map){
     return StoreItem(
       id: map['id'],
       categoryId: map['categoryId'],
@@ -167,7 +155,7 @@ class ItemRating{
     this.star_5,
   });
 
-  static toObject(Map<String,dynamic> map){
+  factory ItemRating.toObject(Map<String,dynamic> map){
     return ItemRating(
       itemId: map['itemId'],
       star_1: map['star_1'],

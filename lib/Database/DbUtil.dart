@@ -14,7 +14,7 @@ class DbUtil{
   static const Tbl_BidItemImg = 'bidItem_img';
   static const Tbl_ApprovalImg = 'store_veriification_img';
   static const Tbl_Store = 'store';
-  static const Tbl_StoreItem = 'storeitems';
+  static const Tbl_StoreItem = 'item';
   static const Tbl_Notification = 'notification';
   static const Tbl_NotificationType = 'notificationtype';
   static const Tbl_StatusType = 'statustype';
@@ -52,6 +52,7 @@ class DbUtil{
       await _db.execute('create table $Tbl_ItemCategory (id TEXT,categoryName TEXT)');
       await _db.execute('create table $Tbl_ItemTags (id TEXT,tagName TEXT)');
       await _db.execute('create table $Tbl_GioLocation (id TEXT,storeId TEXT,longitude TEXT,latitude TEXT)');
+      
     });
   }
 
@@ -135,7 +136,7 @@ class DbAccess{
 
   static Future<int> updateData(Map<String,dynamic> data,table) async {
     final db = await _dbUtil.database;
-    return db.update(table, data,where: data['id'],conflictAlgorithm: ConflictAlgorithm.replace);
+    return db.update(table, data,where: "id = ?",whereArgs: [data['id']]);
   }
 
   static Future<int> dropTable(table) async {

@@ -8,7 +8,7 @@ class UserCredential{
     this.userType
   });
 
-  static UserCredential loadCredential(){
+  factory UserCredential.loadCredential(){
     return UserCredential(id: '1',username: 'ianreyqaz',password: '123456',userType: 'User');
   }
 
@@ -56,7 +56,7 @@ class UserAccount{
     return UserAccount(id: '1',firstname: 'ianrey',lastname: 'Acampado',gender: 'Male',contactNo: '09359002344',email: 'Ianrey@gmail.com',userId: '1',accountStatus: '1');
   }
 
-  static toObject(Map<String,dynamic> map){
+  factory UserAccount.toObject(Map<String,dynamic> map){
     return UserAccount(
       id: map['id'],
       firstname: map['firstname'],
@@ -95,54 +95,6 @@ class UserAccount{
   }
 }
 
-class UserImage{
-  String id,parentId,filename,binaryfile;
-
-  UserImage({this.id,this.parentId,this.filename,this.binaryfile});
-
-  static toObject(Map<String,dynamic> map){
-    return UserImage(
-      id: map['id'],
-      parentId: map['parentId'],
-      filename: map['filename'],
-      binaryfile: null
-    );
-  }
-
-  Map<String,dynamic> toMapWid(){
-    return{
-      'id':id,
-      'parentId':parentId,
-      'filename':filename,
-    };
-  }
-
-  Map<String,dynamic> toMapWOid(){
-    return{
-      'parentId':parentId,
-      'filename':filename,
-    };
-  }
-
-  Map<String,dynamic> toMapWidUpload(){
-    return{
-      'id':id,
-      'parentId':parentId,
-      'filename':filename,
-      'binaryfile':binaryfile
-    };
-  }
-
-  Map<String,dynamic> toMapWOidUpload(){
-    return{
-      'parentId':parentId,
-      'filename':filename,
-      'binaryfile':binaryfile
-    };
-  }
-
-}
-
 class UserNotification{
   String id,userId,message,dateRecieved,notificationType,status;
 
@@ -155,7 +107,7 @@ class UserNotification{
     this.userId
   });
 
-  static toObect(Map<String,dynamic> map){
+  factory UserNotification.toObect(Map<String,dynamic> map){
     return UserNotification(
       id: map['id'],
       dateRecieved: map['dateRecieved'],

@@ -1,11 +1,9 @@
-
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pyesa_app/Controller/Controller.dart';
-import 'package:pyesa_app/Models/User.dart';
+import 'package:pyesa_app/Models/image.dart';
+import 'dart:convert';
 import 'dart:math';
 import 'dart:io';
 class RegisterUser extends StatefulWidget{
@@ -33,7 +31,7 @@ class Register extends State<RegisterUser>{
     if(_key.currentState.validate()){
       _key.currentState.save();
       LoadingScreen.showLoading(context,'Loading   ');
-      var result = await HpController.registerUser(text);
+      var result = await DataController.registerUser(text);
       Navigator.pop(context);
       Future.delayed(Duration(seconds: 1));
       if(result){
@@ -253,7 +251,7 @@ class _StoreRegisterState extends State<StoreRegister> {
   ScrollController sc;
   final _key = GlobalKey<FormState>();
   List<TextEditingController> text = [];
-  UserImage tinFile = UserImage();
+  ImageData tinFile = ImageData();
 
   @override
   initState(){
@@ -284,7 +282,7 @@ class _StoreRegisterState extends State<StoreRegister> {
   acceptance() async {
     Navigator.pop(context);
     LoadingScreen.showLoading(context, "Submitting Data...");
-    var result = await HpController.registerStore(text, tinFile);
+    var result = await DataController.registerStore(text, tinFile);
     Navigator.pop(context);
     if(result){
       await LoadingScreen.showResultDialog(context, "Form Submitted", 25);

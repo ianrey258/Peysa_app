@@ -5,7 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:geolocation/geolocation.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:pyesa_app/LandingPage/Store.dart';
+import 'package:pyesa_app/Screens/LandingPage/Store.dart';
 import 'package:pyesa_app/Models/Store.dart';
 import 'package:pyesa_app/Models/Item.dart';
 import 'dart:math';

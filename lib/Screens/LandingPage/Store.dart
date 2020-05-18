@@ -7,7 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:pyesa_app/Models/Item.dart';
 import 'package:pyesa_app/Models/Store.dart';
-import 'package:pyesa_app/LandingPage/LandingPage.dart';
+import 'package:pyesa_app/Models/image.dart';
+import 'package:pyesa_app/Screens/LandingPage/LandingPage.dart';
 import 'package:pyesa_app/Controller/Controller.dart';
 import 'package:pyesa_app/Models/User.dart';
 import 'package:toast/toast.dart';
@@ -25,7 +26,7 @@ class MyStorestate extends State<MyStore> {
   List<TextEditingController> text = [];
   Store store = Store();
   UserAccount user = UserAccount();
-  List<StoreImage> storeImages = [];
+  List<ImageData> storeImages = [];
 
   @override
   initState() {
@@ -192,6 +193,7 @@ class MyStorestate extends State<MyStore> {
       future:  ImageController.getItemImg(id),
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
+          print(result.data);
           if(result.data.isNotEmpty){
             return Image.network(ImageController.getItemNetImage(result.data[0]['filename']),fit: BoxFit.fill,);
           }
@@ -203,7 +205,6 @@ class MyStorestate extends State<MyStore> {
   }
   
   Widget itemContainer(data){
-    print(data);
     return RaisedButton(
       padding: EdgeInsets.all(0),
       child: Container(
@@ -231,6 +232,8 @@ class MyStorestate extends State<MyStore> {
       future: DataController.getStoreItem(),
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
+          print(result.data.length);
+          print(result.data);
           return Container(
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
@@ -425,10 +428,10 @@ class _RegisterItemState extends State<RegisterItem> {
   }
 
   Future<List> file2Object() async {
-    List<UserImage> imageList = [];
+    List<ImageData> imageList = [];
     images.forEach((element) {
       if(element.path != 'null'){
-        UserImage item = UserImage();
+        ImageData item = ImageData();
         item.filename = Random().nextInt(1000000).toString()+'_'+element.path.split('/').last;
         item.binaryfile = base64Encode(element.readAsBytesSync());
         imageList.add(item);
@@ -443,10 +446,10 @@ class _RegisterItemState extends State<RegisterItem> {
       text[4].text = await findIdCategory(cat);
       text[5].text = await findIdTag(tag);
       LoadingScreen.showLoading(context, 'Registering Item');
-      var result = await HpController.registerItem(text,await file2Object());
+      var result = await DataController.registerItem(text,await file2Object());
       Navigator.pop(context);
       if(result == 'Item Registered'){
-        await LoadingScreen.showResultDialog(context, result, 15);
+        await LoadingScreen.showResultDialog(context, result, 20);
         Navigator.pop(context);
         Navigator.popAndPushNamed(context,'MyStore');
       } else {
@@ -635,25 +638,91 @@ class EditStoreItem extends StatefulWidget {
 
 class _EditStoreItemState extends State<EditStoreItem> {
   ScrollController _sc;
-  List<TextEditingController> text;
+  List<TextEditingController> text = [];
   final _key = GlobalKey<FormState>();
-  List<File> images = [];
-  List<String> deleteBin = [];
+  StoreItem item = StoreItem();
+  List<ImageData> images = [];
   List<String> category = [];
   List<String> tags = [];
-  var cat = 'Other',tag = 'Other',refresh = true;
+  List<Map> map ;
+  var cat = 'Other',tag = 'Other',refresh = true,update = false;
 
   @override
-  void initState() {
+  initState(){
     super.initState();
     text = [];
     for(int i = 0; i < 10; i++){
       text.add(TextEditingController());
     }
+    initCatags();
   }
-  //Function Util Section
-  validate(){
 
+  void refreshState(){
+    setState(() {
+      refresh = !refresh;
+    });
+  }
+  
+  void initCatags() async {
+    List list1 = await DataController.getCategory();
+    List list2 = await DataController.getTags();
+    list1.forEach((element) {category.add(element['categoryName']);});
+    list2.forEach((element) {tags.add(element['tagName']);});
+    refreshState();
+  }
+
+  //Function Util Section
+  validate() async {
+    if(_key.currentState.validate()){
+      _key.currentState.save();
+      LoadingScreen.showLoading(context, 'Saving Item Details');
+      await savingState();
+      String result = await DataController.savingItemDetail(item.toMapWid());
+      Navigator.pop(context);
+      if(result != 'Item Updated'){
+        await LoadingScreen.showResultDialog(context, result, 20);
+      } else {
+        await LoadingScreen.showResultDialog(context, result, 20);
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  savingState() async {
+    item.itemName = text[0].text;
+    item.itemStack = text[1].text;
+    item.itemPrice = text[2].text;
+    item.itemDescription= text[3].text;
+    item.categoryId = await findCatId(cat);
+    item.tagId = await findTagId(tag);
+  }
+
+  Future<String> findCatId(name) async {
+    String id;
+    List mapCategory = await DataController.getCategory();
+    mapCategory.forEach((element) => element['categoryName'] == name ? id = element['id'] : null);
+    return id;
+  }
+
+  Future<String> findTagId(name) async {
+    String id;
+    List mapTag = await DataController.getTags();
+    mapTag.forEach((element) => element['tagName'] == name ? id = element['id'] : null);
+    return id;
+  }
+
+  removeItem() async {
+    LoadingScreen.showLoading(context, 'Removing Item ...');
+    images.removeAt(images.length-1);
+    String result = await DataController.removeItem(item.toMapWid(), images);
+    Navigator.pop(context);
+    if(result != 'Item Deleted'){
+      Toast.show(result, context,gravity: Toast.BOTTOM,duration: 2);
+    } else{
+      Navigator.pop(context);
+      Navigator.popAndPushNamed(context, 'MyStore');
+      Toast.show(result, context,gravity: Toast.BOTTOM,duration: 2);
+    }
   }
 
   //itemImages Section
@@ -663,7 +732,37 @@ class _EditStoreItemState extends State<EditStoreItem> {
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
           if(result.data.isNotEmpty){
-            return Container();
+            initImages(result.data);
+            return Container(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                controller: _sc,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: images.map(((image){
+                    if(image.id == null){
+                      return Container(
+                        width: 250,
+                        height: 200,
+                        child: FlatButton(
+                          padding: EdgeInsets.all(0),
+                          child: Icon(Icons.add_a_photo,size: 50,), 
+                          onPressed: (){chooseUpload();}
+                        )
+                      );
+                    }
+                    return Center(
+                      child: FlatButton(
+                        padding: EdgeInsets.all(0),
+                        child: image.id != null ? Image.network(ImageController.getItemNetImage(image.filename),width: 250,height: 200,) : Text("No Image"), 
+                        onPressed: (){imageFullSize(image);}
+                      )
+                    );
+                  })
+                  ).toList(),
+                ),
+              ),
+            );
           } else {
             return Container();
           }
@@ -673,29 +772,215 @@ class _EditStoreItemState extends State<EditStoreItem> {
     );
   }
 
+  initImages(List dataImages){
+    images.clear();
+    if(dataImages.length < 5){
+      dataImages.forEach((element)=>images.add(ImageData.toObject(element)));
+      images.add(ImageData(id: null));
+    } else {
+      dataImages.forEach((element)=>images.add(ImageData.toObject(element)));
+    }
+  }
+
+  _getPicture(source) async {
+    Navigator.pop(context);
+    File _item = await ImagePicker.pickImage(source: source);
+    ImageData image = ImageData();
+    if(_item != null){
+      image.parentId = item.id;
+      image.filename = Random().nextInt(1000000).toString()+'_'+_item.path.split('/').last;
+      image.binaryfile = base64Encode(_item.readAsBytesSync());
+      LoadingScreen.showLoading(context, 'Uploading ...');
+      String result = await  ImageController.addStoreItemImage(image);
+      if(result!='Image Added'){
+        Navigator.pop(context);
+        await LoadingScreen.showResultDialog(context, result, 20);
+      }
+      Navigator.pop(context);
+      refreshState();
+    }
+  }
+
+  Future<bool> chooseUpload(){
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Choose"),
+        content: Container(
+          height: MediaQuery.of(context).size.height * .2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              RaisedButton(
+                onPressed: (){_getPicture(ImageSource.gallery);},
+                child: Text("       Gallery      "),
+              ),
+              Row(children: <Widget>[
+                Expanded(child: Divider()),
+                Text("or"),
+                Expanded(child: Divider()),
+              ]),
+              RaisedButton(
+                onPressed: (){_getPicture(ImageSource.camera);},
+                child: Text("Take A Photo"),
+              ),
+            ]
+          )
+        ),
+      ),
+    );
+  }
+
+  Future<bool> imageFullSize(image){
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.only(bottom: 50),
+          child: Column(
+            children: <Widget>[
+              Align(
+                alignment: Alignment.centerRight,
+                child: RaisedButton(
+                  onPressed:()=>removingImage(image),
+                  child: Text('Remove'),
+                ),
+              ),
+              Expanded(
+                child: Image.network(ImageController.getItemNetImage(image.filename)),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  removingImage(ImageData image) async {
+    Navigator.pop(context);
+    if(images.length == 2){
+      await LoadingScreen.showResultDialog(context, 'Sorry Last Image cant Delete', 20);
+    } else{
+      LoadingScreen.showLoading(context, 'Removing Image ...');
+      String result = await ImageController.removeStoreItemImage(image);
+      if(result != 'Image Deleted'){
+        Navigator.pop(context);
+        await LoadingScreen.showResultDialog(context, result, 20);
+      }
+      Navigator.pop(context);
+      refreshState();
+    }
+  }
+
   //inputFields Section
   Widget inputFields(){
     return FutureBuilder(
       future: DataController.getItemById(widget.id),
       builder: (_,result){
-        if(result.connectionState == ConnectionState.done){
-          if(result.hasData){
+        if(result.hasData){
+          if(!update){
             initData(result.data);
-            print(result.data);
-            return Container();
           }
+          return Container(
+            child: Column(
+              children: <Widget>[
+                inputField("Name Item",text[0],TextInputType.text),
+                inputField("Qty of Stock",text[1],TextInputType.numberWithOptions(signed: false,decimal: false)),
+                inputField("Price", text[2], TextInputType.numberWithOptions(signed: false,decimal: true)),
+                inputField("Description", text[3], TextInputType.text),
+                Text('Select Category'),
+                itemCategory(),
+                Text('Select Tags'),
+                itemTags()
+              ],
+            ),
+          );
         }
-        return Container();
+        return Center(
+          child: CircularProgressIndicator(),
+        );
       }
     );
   }
 
-  initData(data){
+  Widget inputField(textlabel,controller,keyboardType){
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(labelText: textlabel),
+      validator: (val) => val.length > 0 ? null : 'Required '+textlabel,
+    );
+  }
 
+  initData(data) async {
+    item = StoreItem.toObject(data);
+    cat = await getCategory(item.categoryId);
+    tag = await getTag(item.tagId);
+    text[0].text = item.itemName;
+    text[1].text = item.itemStack;
+    text[2].text = item.itemPrice;
+    text[3].text = item.itemDescription;
+    update = !update;
+  }
+
+  Widget itemCategory(){
+    return FutureBuilder(
+      future: DataController.getCategory(),
+      builder: (_,result){
+        if(result.connectionState == ConnectionState.done && result.hasData){
+          return DropdownButtonFormField(
+            items: category.map((data){
+              return DropdownMenuItem(
+                value: data,
+                child: Text(data)
+              );
+            }).toList(), 
+            onChanged: (val){cat = val;},
+            value: cat,
+          );
+        }
+        return SizedBox(height: 40,);
+      }
+    );
+  }
+
+  Widget itemTags(){
+    return FutureBuilder(
+      future: DataController.getCategory(),
+      builder: (_,result){
+        if(result.connectionState == ConnectionState.done && result.hasData){
+          return DropdownButtonFormField(
+            items: tags.map((data){
+              return DropdownMenuItem(
+                value: data,
+                child: Text(data)
+              );
+            }).toList(), 
+            onChanged: (val){tag = val;},
+            value: tag,
+          );
+        }
+        return SizedBox(height: 40,);
+      }
+    );
+  }
+
+  Future<String> getCategory(id) async {
+    String categoryName;
+    List mapCategory = await DataController.getCategory();
+    mapCategory.forEach((element) => element['id'] == id ? categoryName = element['categoryName'] : null);
+    return categoryName;
+  }
+
+  Future<String> getTag(id) async {
+    String tagName;
+    List mapTags = await DataController.getTags();
+    mapTags.forEach((element) => element['id'] == id ? tagName = element['tagName'] : null);
+    return tagName;
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return AlertDialog(
       title: Row(
         children: <Widget>[
@@ -709,7 +994,7 @@ class _EditStoreItemState extends State<EditStoreItem> {
                 Icon(Icons.delete_forever)
               ],
             ),
-            onPressed: (){},
+            onPressed: (){removeItem();},
           )
         ],
       ),
@@ -724,14 +1009,6 @@ class _EditStoreItemState extends State<EditStoreItem> {
               children: <Widget>[
                 itemImages(),
                 inputFields()
-                // inputField("Name Item",text[0],TextInputType.text),
-                // inputField("Qty of Stock",text[1],TextInputType.numberWithOptions(signed: false,decimal: false)),
-                // inputField("Price", text[2], TextInputType.numberWithOptions(signed: false,decimal: true)),
-                // inputField("Description", text[3], TextInputType.text),
-                // Text('Select Category'),
-                // itemCategory(),
-                // Text('Select Tags'),
-                // itemTags()
               ]
             ),
           ),
@@ -902,7 +1179,7 @@ class StoreReApprove extends StatefulWidget {
 }
 
 class _StoreReApproveState extends State<StoreReApprove> {
-  UserImage tinFile = UserImage();
+  ImageData tinFile = ImageData();
   File image;
 
   @override
@@ -912,7 +1189,7 @@ class _StoreReApproveState extends State<StoreReApprove> {
   }
 
   initApprovalImage() async {
-    tinFile = UserImage.toObject(await ImageController.getApprovalImage());
+    tinFile = ImageData.toObject(await ImageController.getApprovalImage());
   }
 
   void validation() async {
@@ -1012,7 +1289,7 @@ class _EditStoreState extends State<EditStoreDetail> {
   GlobalKey<FormState> _key = new GlobalKey<FormState>();
   Store _store = Store();
   GioLocation _gioLocation = GioLocation();
-  List<UserImage> storeImage = []; 
+  List<ImageData> storeImage = []; 
   ScrollController sc;
   bool loadStore = false,loadlocation = false,loadStoreImages = false,refresh = true;
 
@@ -1102,7 +1379,7 @@ class _EditStoreState extends State<EditStoreDetail> {
     Navigator.pop(context);
     var image = await ImagePicker.pickImage(source: source);
     if(image != null){
-      UserImage storeImage = UserImage();
+      ImageData storeImage = ImageData();
       storeImage.parentId = _store.id;
       storeImage.filename = Random().nextInt(10000000).toString()+'_'+image.path.split('/').last;
       storeImage.binaryfile = base64Encode(image.readAsBytesSync());
@@ -1186,7 +1463,7 @@ class _EditStoreState extends State<EditStoreDetail> {
     refreshState();
   }
 
-  Widget imageContainer(UserImage image){
+  Widget imageContainer(ImageData image){
     return SizedBox(
       child: Column(
         children: <Widget>[
@@ -1207,10 +1484,10 @@ class _EditStoreState extends State<EditStoreDetail> {
   loadStoreImage(List storeimages){
     storeImage = [];
     for(int i = 0;i<storeimages.length;i++){
-      storeImage.add(UserImage.toObject(storeimages[i]));
+      storeImage.add(ImageData.toObject(storeimages[i]));
     }
     if(storeimages.length < 5 || storeImage == []){
-      storeImage.add(UserImage(id: null));
+      storeImage.add(ImageData(id: null));
     }
   }
 

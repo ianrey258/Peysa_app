@@ -1,8 +1,8 @@
 import 'package:pyesa_app/Database/DbUtil.dart';
-import 'package:pyesa_app/Models/Item.dart';
 import 'package:pyesa_app/Models/User.dart';
 import 'package:pyesa_app/Models/Store.dart';
-import 'package:pyesa_app/Requesthttp/ApiRequest.dart';
+import 'package:pyesa_app/Models/image.dart';
+import 'package:pyesa_app/Services/ApiRequest.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,64 +11,7 @@ import 'dart:io';
 
 class HpController{
   
-  static Future<bool> registerUser(List text) async {
-    UserCredential user = UserCredential(username: text[0].text,password: text[1].text,userType: 'User');
-    String result = await ApiRequest.registerUser(user.toMapWOid());
-    if(result != 'null'){
-      UserAccount userAccount = UserAccount(userId: result,firstname: text[2].text,lastname: text[3].text,gender: text[6].text,
-                              email: text[4].text,contactNo: text[5].text,accountStatus: '1');
-      await ApiRequest.registerAccount(userAccount.toMapWOid());
-    }
-    return result != 'null' ? true : false;
-  }
-
-  static Future<bool> registerStore(List text,UserImage image) async {
-    Map accountUser = await DataController.getUserAccount();
-    Store store = Store(accountId: accountUser['id'],storeName: text[0].text,storeInfo: text[1].text,storeAddress: text[2].text,storeFollowers: '0',storeRating: '0',storeStatus: '15',storeVisited: '0');
-    Map result = await ApiRequest.registerStore(store.toMapWOid());
-    Map result2 = await ApiRequest.getStoreAprovalImage({'parentId':result['id']});
-    image.parentId = result['id'];image.id = result2[0]['id'];
-    Map result3 = await ApiRequest.uploadApprovalImage(image.toMapWidUpload());
-    print(result3);
-    if(result3.isNotEmpty){
-      await DbAccess.insertData(result, DbUtil.Tbl_Store);
-      await DbAccess.insertData(result3[0], DbUtil.Tbl_ApprovalImg);
-    }
-    return result3.isNotEmpty;
-  }
-
-  static Future<String> registerItem(List text,List images) async {
-    Map data = StoreItem(itemName: text[0].text,itemStack: text[1].text,itemPrice: text[2].text,itemDescription: text[3].text,categoryId: text[4].text,tagId: text[5].text,itemRating: '0',topupId: '1').toMapWOid();
-    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    Map item = {};
-    if(await HpController.hasConnection()){
-      item = await ApiRequest.insertItem(data);
-      if(item.isNotEmpty){
-        await DbAccess.dropTable(DbUtil.Tbl_StoreItem);
-        await ApiRequest.insertStoreItem({'storeId':store['id'],'itemId':item[0]['id']});
-        Map storeitem = await ApiRequest.getStoreItem({'id':store['id']});
-        if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
-      }
-    }
-    return await ImageController.addStoreItemImage(images,item[0]['id']);
-  }
-
-  static Future<bool> removeItem(Map item,List images) async {
-    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
-      images.map((image)async{await ApiRequest.deleteItemImage({'table':DbUtil.Tbl_ItemImg,'id':image['id'],'filename':image['filename']});});
-      await ApiRequest.deleteData({'table':DbUtil.Tbl_StoreItem,'id':item['id']});
-      await DbAccess.dropTable(DbUtil.Tbl_StoreItem);
-      await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-      Map storeitem = await ApiRequest.getStoreItem({'id':store['id']});
-      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
-      if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
-      if(storeItemImage.isNotEmpty){storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});}
-    }
-    return await HpController.hasConnection();
-  }
-
-  static Future<bool> reApprove(UserImage image) async {
+  static Future<bool> reApprove(ImageData image) async {
     Map accountUser = await DataController.getUserAccount();
     Map approval = await ApiRequest.uploadApprovalImage(image.toMapWidUpload());
     print(approval);
@@ -124,14 +67,75 @@ class HpController{
 
 class DataController{
 
+  static Future<bool> registerUser(List text) async {
+    UserCredential user = UserCredential(username: text[0].text,password: text[1].text,userType: 'User');
+    String result = await ApiRequest.registerUser(user.toMapWOid());
+    if(result != 'null'){
+      UserAccount userAccount = UserAccount(userId: result,firstname: text[2].text,lastname: text[3].text,gender: text[6].text,
+                              email: text[4].text,contactNo: text[5].text,accountStatus: '1');
+      await ApiRequest.registerAccount(userAccount.toMapWOid());
+    }
+    return result != 'null' ? true : false;
+  }
+
+  static Future<bool> registerStore(List text,ImageData image) async {
+    Map accountUser = await DataController.getUserAccount();
+    Store store = Store(accountId: accountUser['id'],storeName: text[0].text,storeInfo: text[1].text,storeAddress: text[2].text,storeFollowers: '0',storeRating: '0',storeStatus: '15',storeVisited: '0');
+    Map result = await ApiRequest.registerStore(store.toMapWOid());
+    Map result2 = await ApiRequest.getStoreAprovalImage({'parentId':result['id']});
+    image.parentId = result['id'];image.id = result2[0]['id'];
+    Map result3 = await ApiRequest.uploadApprovalImage(image.toMapWidUpload());
+    print(result3);
+    if(result3.isNotEmpty){
+      await DbAccess.insertData(result, DbUtil.Tbl_Store);
+      await DbAccess.insertData(result3[0], DbUtil.Tbl_ApprovalImg);
+    }
+    return result3.isNotEmpty;
+  }
+
+  static Future<String> registerItem(List text,List images) async {
+    Map data = StoreItem(itemName: text[0].text,itemStack: text[1].text,itemPrice: text[2].text,itemDescription: text[3].text,categoryId: text[4].text,tagId: text[5].text,itemRating: '0',topupId: '1').toMapWOid();
+    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
+    Map item = {};
+    if(await HpController.hasConnection()){
+      item = await ApiRequest.insertItem(data);
+      if(item.isNotEmpty){
+        await DbAccess.dropTable(DbUtil.Tbl_StoreItem);
+        await ApiRequest.insertStoreItem({'storeId':store['id'],'itemId':item[0]['id']});
+        Map storeitem = await ApiRequest.getStoreItem({'id':store['id']});
+        if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
+      }
+    }
+    return await ImageController.addStoreItemImages(images,item[0]['id']);
+  }
+
+  static Future<String> removeItem(Map item,List images) async {
+    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
+    if(await HpController.hasConnection()){
+      for(int i=0;i<images.length;i++){
+        await ApiRequest.deleteItemImage({'table':DbUtil.Tbl_ItemImg,'id':images[i].id,'filename':images[i].filename});
+      }
+      await ApiRequest.deleteData({'table':DbUtil.Tbl_StoreItem,'id':item['id']});
+      await DbAccess.dropTable(DbUtil.Tbl_StoreItem);
+      await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
+      Map storeitem = await ApiRequest.getStoreItem({'id':store['id']});
+      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
+      if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
+      if(storeItemImage.isNotEmpty){storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});}
+      return 'Item Deleted';
+    }
+    return 'Cannot Delete Item Due to Connection';
+  }
+
+
   static Future<void> loadUserData() async {
     Map user = await DbAccess.getData(DbUtil.Tbl_User);
     Map userAccount = await ApiRequest.getUserAccount({'userId':user['id']});
-    Map userImage = await ApiRequest.getUserImage({'parentId':userAccount[0]['id']});
+    Map imageData = await ApiRequest.getUserImage({'parentId':userAccount[0]['id']});
     Map notification = await ApiRequest.getNotification({'userId':userAccount[0]['id']});
     Map store = await ApiRequest.getStore({'accountId':userAccount[0]['id']});
     if(userAccount.isNotEmpty){await DbAccess.insertData(userAccount[0],DbUtil.Tbl_UserAccount);}
-    if(userImage.isNotEmpty){await DbAccess.insertData(userImage[0],DbUtil.Tbl_UserImg);}
+    if(imageData.isNotEmpty){await DbAccess.insertData(imageData[0],DbUtil.Tbl_UserImg);}
     if(notification.isNotEmpty){await DbAccess.insertData(notification[0], DbUtil.Tbl_Notification);}
     if(store.isNotEmpty){await loadStoreData(store);}
   }
@@ -217,6 +221,15 @@ class DataController{
     await ApiRequest.registerStore(store);
   }
 
+  static Future<String> savingItemDetail(item) async {
+    if(await HpController.hasConnection()){
+      await ApiRequest.insertItem(item);
+      await DbAccess.updateData(item, DbUtil.Tbl_StoreItem);
+      return 'Item Updated';
+    }
+    return 'Cannot Update Item due to Connection';
+  }
+ 
   static Future<List> getNotification() async {
     Map userAccount = await DbAccess.getData(DbUtil.Tbl_UserAccount);
     if(await ApiRequest.testConnection()){
@@ -240,13 +253,17 @@ class ImageController{
   static String storeImageNetLocation = RequestUrl.baseUrl+'assets/StoreImage/';
   static String itemImageNetLocation = RequestUrl.baseUrl+'assets/ItemImage/';
 
-  static Future<void> savingProfileImage(userImage4db,userImage4Api) async {
-    await ApiRequest.uploadImageProfile(userImage4Api);
-    await DbAccess.updateData(userImage4db,DbUtil.Tbl_UserImg);
+  static Future<void> savingProfileImage(imageData4db,imageData4Api) async {
+    await ApiRequest.uploadImageProfile(imageData4Api);
+    await DbAccess.updateData(imageData4db,DbUtil.Tbl_UserImg);
   }
 
   static Future<List> getItemImg(id) async {
     return await DbAccess.getDataListWhere(DbUtil.Tbl_ItemImg,'parentId = '+id);
+  }
+
+  static Future<List> getItemImgs() async {
+    return await DbAccess.getDataList(DbUtil.Tbl_ItemImg);
   }
 
   static Future<Map<String,dynamic>> getUserImage() async {
@@ -277,7 +294,7 @@ class ImageController{
     return 'Cannot Upload Image due to Connection';
   }
 
-  static Future<String> removeStoreImage(UserImage image) async {
+  static Future<String> removeStoreImage(ImageData image) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
     if(await HpController.hasConnection()){
       await ApiRequest.deleteStoreImage({'table':'store_img','id':image.id,'filename':image.filename});
@@ -293,35 +310,50 @@ class ImageController{
     return 'Cannot delete Image due to Connection';
   }
 
-  static Future<String> addStoreItemImage(List<UserImage> data,id) async {
+  static Future<String> addStoreItemImages(List<ImageData> data,id) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
     if(await HpController.hasConnection()){
-      data.forEach((element)async{
-        element.parentId = id;
-        await ApiRequest.insertItemImage(element.toMapWOidUpload());
-      });
-      Map images = await ApiRequest.getStoreItemImage({'parentId':store['id']});
-      await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-      if(images.isNotEmpty){
-        for(int i=0;i<images.length;i++){
-        await DbAccess.insertData(images[i], DbUtil.Tbl_ItemImg);
-        }
+      for(int i =0;i<data.length;i++){
+        data[i].parentId = id;
+        await ApiRequest.insertItemImage(data[i].toMapWOidUpload());
+      }
+      Future.delayed(Duration(seconds: 3));
+      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
+      if(storeItemImage.isNotEmpty){
+        await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
+        if(storeItemImage.isNotEmpty){storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});}
       }
       return 'Item Registered';
     }
     return 'Cannot Registered Item due to Connection';
   }
 
-  static Future<String> removeStoreItemImage(UserImage image) async {
+  static Future<String> addStoreItemImage(ImageData image) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
     if(await HpController.hasConnection()){
-      await ApiRequest.deleteItemImage({'table':'store_img','id':image.id,'filename':image.filename});
-      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
-      await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-      if(storeItemImage.isNotEmpty){
-        storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});
+      var result = await ApiRequest.insertItemImage(image.toMapWOidUpload());
+      if(result.isNotEmpty){
+        var images = await ApiRequest.getStoreItemImage({'id':store['id']});
+        if(images.isNotEmpty){
+          DbAccess.dropTable(DbUtil.Tbl_ItemImg);
+          images.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});
+          return 'Image Added';
+        }
       }
-      return 'Image Deleted';
+    }
+    return 'Cannot update Item Image due to Connection';
+  }
+
+  static Future<String> removeStoreItemImage(ImageData image) async {
+    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
+    if(await HpController.hasConnection()){
+      await ApiRequest.deleteItemImage({'table':'item_img','id':image.id,'filename':image.filename});
+      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
+      if(storeItemImage.isNotEmpty){
+        await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
+        storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});
+        return 'Image Deleted';
+      }
     }
     return 'Cannot delete Image due to Connection';
   }

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pyesa_app/Controller/Controller.dart';
 import 'package:pyesa_app/Models/User.dart';
 import 'package:pyesa_app/Models/Store.dart';
+import 'package:pyesa_app/Models/image.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:io';
@@ -15,7 +16,7 @@ class Account extends StatefulWidget{
 }
 class Accountstate extends State<Account>{
   ScrollController _sc;
-  UserImage _userImage;
+  ImageData _userImage;
   File _image;
   bool hasStore = false,refresh = true;
   Store store = Store();
@@ -241,7 +242,7 @@ class Accountstate extends State<Account>{
       future: ImageController.getUserImage(),
       builder: (context,snapshot){
         if(snapshot.connectionState == ConnectionState.done){
-          _userImage = UserImage.toObject(snapshot.data);
+          _userImage = ImageData.toObject(snapshot.data);
           return snapshot.hasData && snapshot.data['filename'] != 'null' ? Image.network(ImageController.getUserNetImage(snapshot.data['filename']),filterQuality: FilterQuality.medium,fit: BoxFit.cover,width: 62,height: 62,):
            Icon(FontAwesome.user_circle_o,size: 65,);
         } else {

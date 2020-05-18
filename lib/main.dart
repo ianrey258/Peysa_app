@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:pyesa_app/LandingPage/Account.dart';
-import 'package:pyesa_app/LandingPage/LandingPage.dart';
-import 'package:pyesa_app/LandingPage/Purchases.dart';
-import 'package:pyesa_app/LandingPage/Rating&Reviews.dart';
-import 'package:pyesa_app/LandingPage/Notification.dart';
-import 'package:pyesa_app/LandingPage/RequestItem.dart';
-import 'package:pyesa_app/LandingPage/Store.dart';
-import 'package:pyesa_app/LandingPage/Cart.dart';
-import 'package:pyesa_app/Login&Register/Login.dart';
-import 'package:pyesa_app/Login&Register/RegisterUser/Register.dart';
+import 'package:pyesa_app/Screens/LandingPage/Account.dart';
+import 'package:pyesa_app/Screens/LandingPage/LandingPage.dart';
+import 'package:pyesa_app/Screens/LandingPage/Purchases.dart';
+import 'package:pyesa_app/Screens/LandingPage/Purchases.dart';
+import 'package:pyesa_app/Screens/LandingPage/Rating&Reviews.dart';
+import 'package:pyesa_app/Screens/LandingPage/Notification.dart';
+import 'package:pyesa_app/Screens/LandingPage/RequestItem.dart';
+import 'package:pyesa_app/Screens/LandingPage/Store.dart';
+import 'package:pyesa_app/Screens/LandingPage/Cart.dart';
+import 'package:pyesa_app/Screens/Login&Register/Login.dart';
+import 'package:pyesa_app/Screens/Login&Register/RegisterUser/Register.dart';
 import 'package:pyesa_app/Controller/Controller.dart';
 
 

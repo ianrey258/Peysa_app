@@ -144,7 +144,7 @@ class ApiRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'ImageController/removeItemImage',body: data);
-      print(response.body);
+      print('on Deleting Image '+response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -316,6 +316,7 @@ class ApiRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'StoreController/insertItem',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -328,6 +329,7 @@ class ApiRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'StoreController/insertStoreItem',body: data);
+      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -412,6 +414,102 @@ class ApiRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'AccountController/fetchNotification',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertBidItem(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/insertBidItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidItem(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertBidItemManager(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/insertBidItemManager',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertBidder(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/insertBidder',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidder(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidder',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidders(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidders',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertBidChat(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/insertBidChat',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidChats(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidChats',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
