@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+//import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:toast/toast.dart';
 import 'package:pyesa_app/Controller/Controller.dart';
 
@@ -36,7 +36,7 @@ class LoginPage extends State<Login>{
         });
       } else {
         Navigator.pop(context);
-        Toast.show(result[0]['result'], context,duration: 3,gravity: Toast.BOTTOM);
+        Toast.show(result[0]['result'], context,duration: 3,gravity: Toast.TOP);
       }
       print(result);
     }
@@ -63,31 +63,31 @@ class LoginPage extends State<Login>{
       onPressed: (){},
     );
   }
-  Widget _helpButton(){
-    return SpeedDial(
-      backgroundColor: Colors.transparent,
-      elevation: 2,
-      curve: Curves.bounceIn,
-      overlayColor: Color.fromRGBO(0, 0, 0, 1),
-      child: Icon(FontAwesome.question_circle_o,size: 60,),
-      children: [
-        SpeedDialChild(
-          label: "About Us",
-          child: Icon(FontAwesome.info_circle,size: 30,),
-        ),
-        SpeedDialChild(
-          backgroundColor: Colors.redAccent,
-          label: "Report Bug",
-          child: Icon(FontAwesome.bug,size: 30,),
-        ),
-        SpeedDialChild(
-          backgroundColor: Colors.blueGrey,
-          label: "Forget Password",
-          child: Icon(FontAwesome.question,size: 30,),
-        ),
-      ],
-    );
-  }
+  // Widget _helpButton(){
+  //   return SpeedDial(
+  //     backgroundColor: Colors.transparent,
+  //     elevation: 2,
+  //     curve: Curves.bounceIn,
+  //     overlayColor: Color.fromRGBO(0, 0, 0, 1),
+  //     child: Icon(FontAwesome.question_circle_o,size: 60,),
+  //     children: [
+  //       SpeedDialChild(
+  //         label: "About Us",
+  //         child: Icon(FontAwesome.info_circle,size: 30,),
+  //       ),
+  //       SpeedDialChild(
+  //         backgroundColor: Colors.redAccent,
+  //         label: "Report Bug",
+  //         child: Icon(FontAwesome.bug,size: 30,),
+  //       ),
+  //       SpeedDialChild(
+  //         backgroundColor: Colors.blueGrey,
+  //         label: "Forget Password",
+  //         child: Icon(FontAwesome.question,size: 30,),
+  //       ),
+  //     ],
+  //   );
+  // }
 
 
   Widget _inputField(hintText,controller,icon){

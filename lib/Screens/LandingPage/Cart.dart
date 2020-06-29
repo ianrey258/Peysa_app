@@ -15,7 +15,7 @@ class CartState extends State<Cart>{
   Future<bool> editItem(){
     return showDialog(
       context: context,
-      builder: (context)=>ShowItemDetail(item: Item.getItemList()[0],quantity: 5,isEdit: true,)
+      builder: (context)=>ShowItemDetail(item: {})
     );
   }
 

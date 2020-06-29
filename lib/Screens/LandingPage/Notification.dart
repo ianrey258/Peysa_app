@@ -9,6 +9,7 @@ class Notifications extends StatefulWidget{
 class Notificationstate extends State<Notifications>{
   ScrollController _sc;
   List<Map> notificationType = [];
+  bool refresh = false;
 
   @override
   void initState(){
@@ -16,7 +17,19 @@ class Notificationstate extends State<Notifications>{
     initNotType();
   }
 
+  Future<Null> refreshList()async{ 
+    await Future.delayed(Duration(seconds: 1));
+    refreshState();
+  }
+
+  refreshState(){
+    setState(() {
+      refresh = !refresh ? true : false; 
+    });
+  }
+
   void initNotType() async {
+    refreshState();
     notificationType = await DataController.getNotificationType();
   }
 
@@ -84,24 +97,28 @@ class Notificationstate extends State<Notifications>{
   
 
   Widget notification(){
-    return FutureBuilder<List>(
-      future: DataController.getNotification(),
-      builder: (_,result){
-        if(result.connectionState == ConnectionState.done){
-          if(result.hasData){
-            return ListView.builder(
-              reverse: true,
-              controller: _sc,
-              itemCount: result.data.length,
-              itemBuilder: (_,i){
-                return notificationContainer(UserNotification.toObect(result.data[i]));
-              }
-            );
+    return RefreshIndicator(
+      child: FutureBuilder<List>(
+        future: DataController.getNotification(),
+        builder: (_,result){
+          if(result.connectionState == ConnectionState.done){
+            if(result.hasData){
+              List data = result.data;
+              return ListView.builder(
+                //reverse: true,
+                controller: _sc,
+                itemCount: result.data.length,
+                itemBuilder: (_,i){
+                  return notificationContainer(UserNotification.toObect(data[result.data.length - i -1]));
+                }
+              );
+            }
+            return Container();
           }
           return Container();
-        }
-        return Container();
-      },
+        },
+      ), 
+      onRefresh: refreshList
     );
   }
 

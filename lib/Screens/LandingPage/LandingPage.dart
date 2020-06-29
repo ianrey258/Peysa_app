@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
-import 'package:geolocation/geolocation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:pyesa_app/Screens/LandingPage/Store.dart';
 import 'package:pyesa_app/Models/Store.dart';
@@ -20,6 +20,7 @@ class Home extends State<LandingPage> {
   TextEditingController _search = TextEditingController();
   ScrollController _sc = ScrollController();
   MapController _mapController = MapController();
+  GioLocation _geoLocation = GioLocation();
   bool refresh = true;
 
   @override
@@ -31,37 +32,29 @@ class Home extends State<LandingPage> {
     setState(() {
       refresh = !refresh;
     });
+    getLocation();
   }
 
-  getPermission() async {
-    final GeolocationResult result =
-        await Geolocation.requestLocationPermission(
-            permission: LocationPermission(
-                android: LocationPermissionAndroid.fine,
-                ios: LocationPermissionIOS.always));
-    return result;
+  Future<Null> refreshStores() async {
+    refreshState();
+    await Future.delayed(Duration(seconds: 2));
   }
-
-  getLocation() {
-    return getPermission().then((result) async {
-      if (result.isSuccessful) {
-        final coords =
-            await Geolocation.currentLocation(accuracy: LocationAccuracy.best);
-      }
-    });
+  
+  //GeoSection//
+  processLocation() async {
+    if(!(await HpController.hasConnection())){
+      Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      setState(() {
+        _geoLocation.longitude = position.longitude.toString();
+        _geoLocation.latitude = position.latitude.toString();
+      });
+    }
   }
-
-  buildMap() {
-    getLocation().then((response) {
-      if (response.isSuccessful) {
-        response.listen((value) {
-          _mapController.move(LatLng(8.4977678, 124.6290168), 15.0);
-        });
-      } else {
-        _mapController.move(LatLng(8.4977678, 124.6290168), 15.0);
-      }
-    });
+  getLocation(){
+    processLocation();
+    return _geoLocation.longitude != null ?LatLng(double.parse(_geoLocation.latitude), double.parse(_geoLocation.longitude)) : LatLng(0.0,0.0);
   }
+  //GeoSection//
 
   Future<bool> showFilter() async {
     return await showDialog(
@@ -205,82 +198,129 @@ class Home extends State<LandingPage> {
     );
   }
 
-  Future<bool> showItemDetail(Item item) async {
+  Future<bool> showItemDetail(item) async {
     return await showDialog(
       context: context,
       builder: (_) {
-        return ShowItemDetail(item: item,quantity: 0,isEdit: false,);
+        return ShowItemDetail(item: item);
       }
     );
   }
 
-  Widget item(Item item) {
-    return RaisedButton(
-      color: Colors.white,
-      onPressed: ()async{showItemDetail(item);},
-      child: Column(
-        children: <Widget>[
-          Text(item.itemName),
-          Expanded(
-            child: Image.asset(item.images[item.id].itemImg,fit: BoxFit.fill)
-          ),
-          Text("P"+item.itemPrice.toString())
-        ],
-      ),
+  Widget item(item,image){
+    return Container(
+      width: 150,
+      margin: EdgeInsets.only(left: 5,right: 5),
+      child: RaisedButton(
+        padding: EdgeInsets.only(left: 1,right: 1),
+        color: Colors.white,
+        onPressed: ()async{showItemDetail(item);},
+        child: Column(
+          children: <Widget>[
+            Text(item['itemName'],textAlign: TextAlign.center,),
+            SizedBox(height: 1.0,),
+            Expanded(
+              child: Image.network(ImageController.getItemNetImage(image['filename']),fit: BoxFit.contain) ?? Icon(Icons.image,size: MediaQuery.of(context).size.aspectRatio*20,)
+            ),
+            Text("P "+item['itemPrice'])
+          ],
+        ),
+      )
     );
   }
-  List<Widget> generateItems(){
+  
+  List<Widget> generateItems(items,images){
     List<Widget> listitem = [];
-    for(int i = 0;i<Random().nextInt(5);i++){
-      while(true){
-        var random = Random().nextInt(5);
-        if(random>0){
-          listitem.add(item(Item.getItemList()[random]));
-          break;
-        } 
-      }
+    for(int i = 0;i<items.length;i++){
+      listitem.add(item(items[i],images[i]));
     }
     return listitem;
   }
 
-  Widget store(Store store, meters) {
-    return Card(
-      child: Container(
-        height: 200,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            FlatButton(
-                textColor: Colors.black,
-                onPressed: () {
-                  //Navigator.pushNamed(context, 'OtherStore',arguments: OtherStore(id: store.id));
-                },
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: <Widget>[
-                      Image.asset(
-                        'assets/Store/StoreProfile.jpg',
-                        fit: BoxFit.fill,
-                        width: 30,
-                        height: 30,
+  Widget storeImage(image){
+    return Container(
+      width: 30,
+      child: Image.network(ImageController.getStoreNetImage(image),fit: BoxFit.fill,width: 30,height: 30,) ?? 
+            Icon(Icons.store,size: MediaQuery.of(context).size.aspectRatio*20,),
+    );
+  }
+
+  Widget store(id) {
+    return FutureBuilder(
+      future: DataController.getStoreDetails(id),
+      builder: (_,snapshot){
+        if(snapshot.connectionState == ConnectionState.done){
+          if(snapshot.hasData){
+            return Card(
+              child: Container(
+                height: 200,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    FlatButton(
+                        textColor: Colors.black,
+                        onPressed: () {
+                          Store store = Store.toObject(snapshot.data[0]);
+                          Navigator.pushNamed(context, 'OtherStore',arguments: store);
+                        },
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              storeImage(snapshot.data[1]['filename']),
+                              SizedBox(width: 10,),
+                              Text(snapshot.data[0]['storeName'], style: TextStyle(fontSize: 18))
+                            ])),
+                    Divider(indent: 5,endIndent: 5,),
+                    Expanded(
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        controller: _sc,
+                        children: generateItems(snapshot.data[2],snapshot.data[3])
                       ),
-                      SizedBox(width: 10,),
-                      Text(store.storeName, style: TextStyle(fontSize: 18))
-                    ])),
-            Divider(indent: 5,endIndent: 5,),
-            Expanded(
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                controller: _sc,
-                children: generateItems()
+                    ),
+                    Divider(indent: 5,endIndent: 5,),
+                    // Row(
+                    //   children: <Widget>[Expanded(child: SizedBox()), Text(meters)],
+                    // ),
+                  ],
+                ),
               ),
-            ),
-            Divider(indent: 5,endIndent: 5,),
-            Row(
-              children: <Widget>[Expanded(child: SizedBox()), Text(meters)],
-            ),
-          ],
-        ),
+            );
+          }
+        }
+        return Container();
+      },
+    );
+  }
+
+  Widget stores(){
+    return RefreshIndicator(
+      onRefresh: refreshStores,
+      child: FutureBuilder(
+        future: DataController.getStores(),
+        builder: (_,snapshot){
+          if(snapshot.connectionState == ConnectionState.done){
+            if(snapshot.data.isNotEmpty){
+              if(snapshot.data['id'] == 0)return Container(child: Text('Check Internet Connection'),);
+              return Container(
+                child: ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (_,index){
+                    return store(snapshot.data[index]['storeId']);
+                  }
+                ),
+              );
+            }
+            return Center(child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.store,size: MediaQuery.of(context).devicePixelRatio*100,color: Colors.blue,),
+                Text('No Available Stores in This Area',style: TextStyle(fontSize: MediaQuery.of(context).textScaleFactor*20),)
+              ],
+            ),);
+          } 
+          return Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
@@ -340,25 +380,27 @@ class Home extends State<LandingPage> {
         drawer: _drawer(),
         endDrawer: Container(),
         body: TabBarView(
+          physics: NeverScrollableScrollPhysics(),
           children: <Widget>[
-            Container(
-              color: Colors.transparent,
-              child: ListView(
-                padding: EdgeInsets.all(0),
-                children: <Widget>[
-                  // Divider(),
-                  // store(Store.getListStore()[0], "50m Away"),
-                  // Divider(),
-                  // store(Store.getListStore()[1], "100m Away"),
-                  // Divider(),
-                  // store(Store.getListStore()[2], "120m Away"),
-                  // Divider(),
-                  // store(Store.getListStore()[3], "180m Away"),
-                  // Divider(),
-                  // store(Store.getListStore()[4], "200m Away"),
-                ],
-              ),
-            ),
+            stores(),
+            // Container(
+            //   color: Colors.transparent,
+            //   child: ListView(
+            //     padding: EdgeInsets.all(0),
+            //     children: <Widget>[
+            //       // Divider(),
+            //       // store(Store.getListStore()[0], "50m Away"),
+            //       // Divider(),
+            //       // store(Store.getListStore()[1], "100m Away"),
+            //       // Divider(),
+            //       // store(Store.getListStore()[2], "120m Away"),
+            //       // Divider(),
+            //       // store(Store.getListStore()[3], "180m Away"),
+            //       // Divider(),
+            //       // store(Store.getListStore()[4], "200m Away"),
+            //     ],
+            //   ),
+            // ),
             Container(
               color: Colors.white,
               width: size.width,
@@ -366,21 +408,36 @@ class Home extends State<LandingPage> {
               child: Column(
                 children: <Widget>[
                   Expanded(
-                      child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                        center: LatLng(8.4977678, 124.6290168), zoom: 13),
-                    layers: [
-                      TileLayerOptions(
-                          urlTemplate: "https://api.tiles.mapbox.com/v4/"
-                              "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
-                          additionalOptions: {
-                            'accessToken':
-                                'pk.eyJ1IjoiaWFucmV5MjU4IiwiYSI6ImNrNmJubzlwZjAxbjEza21zdW95NnQyMjEifQ.s1VIlRsbcHV6BbTQNmUHgA',
-                            'id': 'mapbox.streets'
-                          })
-                    ],
-                  )),
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                          center: LatLng(0.0,0.0),
+                          //center: getLocation(), 
+                          zoom: 5.0
+                        ),
+                      layers: [
+                        // TileLayerOptions(
+                        //   urlTemplate: "https://api.mapbox.com/styles/v1/ianrey258/ckb28ett60xnh1iry8wtx3tlx/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
+                        //   additionalOptions: {
+                        //     'accessToken': 'pk.eyJ1IjoiaWFucmV5MjU4IiwiYSI6ImNrYjI3eXF0cTA4bjgyd28yeGJta2dtNmQifQ.LtqueENclx7vVAp6IfEusA',
+                        //     'id': 'mapbox.mapbox-streets-v8'
+                        //   }
+                        // ),
+                        MarkerLayerOptions(
+                          markers : [
+                            Marker(
+                              point: getLocation(),
+                              builder: (_){
+                                return Container(child: Icon(Icons.person),);
+                              },
+                              width: 30,
+                              height: 30
+                            )
+                          ]
+                        )
+                      ],
+                    )
+                  ),
                   // Container(
                   //   padding: EdgeInsets.all(10),
                   //   child: Align(
@@ -527,35 +584,49 @@ class StateFilterDialog extends State<FilterDialog> {
 }
 
 class ShowItemDetail extends StatefulWidget {
-  final Item item;
-  final int quantity;
-  final bool isEdit;
-  ShowItemDetail({Key key, this.item,this.quantity,this.isEdit}) : super (key: key);
+  final Map item;
+  ShowItemDetail({Key key, this.item}) : super (key: key);
 
   ShowItemDetailstate createState() => ShowItemDetailstate();
 }
 
 class ShowItemDetailstate extends State<ShowItemDetail> {
-  var qty=1,totalprice=0.0;
+  var qty=1,totalprice=0.0,itemPrice = 0.0;
+  List<Widget> images =[];
+  bool refresh = true;
   TextEditingController text = TextEditingController();
   ScrollController _sc;
 
   @override
   initState(){
-    super.initState();
+    super.initState();  
     setState(() {
-      qty = widget.quantity;
       text.text = qty.toString();
-      totalprice = qty*widget.item.itemPrice;
+      itemPrice = double.parse(widget.item['itemPrice']);
+      totalprice = qty*itemPrice;
+      getImages();
     });
   }
+
+  refreshState(){
+    setState(() {
+      refresh = refresh ? false : true;
+    });
+  }
+
+  getImages() async {
+    Map data = await ImageController.getItemImages(widget.item['id']);
+    data.forEach((key,value) => images.add(Image.network(ImageController.getItemNetImage(value['filename']),fit: BoxFit.fill,)));
+    refreshState();
+  }
+
   Widget ratingWidget(){
     return Center(
       heightFactor: 2,
       child: RatingBar(
         itemCount: 5,
         itemSize: 15,
-        initialRating: widget.item.itemRating,
+        initialRating: double.parse(widget.item['itemRating']),
         onRatingUpdate: (r){},
         itemBuilder: (context,_)=>Icon(
           Icons.star,
@@ -566,7 +637,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
   }
 
   List<Widget> actions(){
-    if(widget.isEdit){
+    if(false){
       return [
         RaisedButton(
           color: Colors.redAccent,
@@ -596,22 +667,27 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
 
   Widget build(_) {
     return AlertDialog(
-      title: Center(child: Text(widget.item.itemName),),
+      title: Center(child: Text(widget.item['itemName']),),
       content: Container(
         height: MediaQuery.of(context).size.height*.5,
-        child: ListView(
-          controller: _sc,
+        child: Column(
           children: <Widget>[
             Container(
               height: MediaQuery.of(context).size.height*.25,
-              child: Center(child:Image.asset(widget.item.images[widget.item.id].itemImg,fit: BoxFit.fill,)),
+              width: MediaQuery.of(context).size.width*.75,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: images,
+                ),
+              ),
             ),
             ratingWidget(),
             SizedBox(height: 15,),
             Row(
               children: <Widget>[
                 Expanded(
-                  child: Text("Description: "+widget.item.itemDescription)
+                  child: Text("Description: "+widget.item['itemDescription'])
                 )
               ],
             ),
@@ -627,7 +703,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: Text("P"+widget.item.itemPrice.toString(),style: TextStyle(fontSize: 15))
+                    child: Text("P"+widget.item['itemPrice'],style: TextStyle(fontSize: 15))
                   ),
                 ),
               ],
@@ -646,7 +722,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                     if(qty>1){
                       qty -=1;
                       text.text = qty.toString();
-                      totalprice = qty*widget.item.itemPrice;
+                      totalprice = qty*itemPrice;
                     }
                   });}
                 ),
@@ -664,10 +740,10 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 IconButton(
                   padding: EdgeInsets.all(0),
                   icon: Icon(Icons.add_circle_outline), onPressed: (){setState(() {
-                    if(qty<=widget.item.itemStack){
+                    if(qty<= int.parse(widget.item['itemStack'])){
                       qty +=1;
                       text.text = qty.toString();
-                      totalprice = qty*widget.item.itemPrice;
+                      totalprice = qty*itemPrice;
                     }
                   });}
                 ),

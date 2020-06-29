@@ -39,7 +39,7 @@ class UserCredential{
 }
 
 class UserAccount{
-  String id,userId,firstname,lastname,contactNo,gender,email,accountStatus;
+  String id,userId,firstname,lastname,contactNo,gender,email,zipCode,accountStatus;
 
   UserAccount({
     this.id,
@@ -49,6 +49,7 @@ class UserAccount{
     this.firstname,
     this.gender,
     this.lastname,
+    this.zipCode,
     this.userId
   });
 
@@ -65,6 +66,7 @@ class UserAccount{
       contactNo: map['contactNo'],
       email: map['email'],
       userId: map['userId'],
+      zipCode: map['zipCode'],
       accountStatus: map['accountStatus']
     );
   }
@@ -78,6 +80,7 @@ class UserAccount{
       'firstname':firstname,
       'gender':gender,
       'lastname':lastname,
+      'zipCode':zipCode,
       'userId':userId,
     };
   }
@@ -90,6 +93,7 @@ class UserAccount{
       'firstname':firstname,
       'gender':gender,
       'lastname':lastname,
+      'zipCode':zipCode,
       'userId':userId,
     };
   }
@@ -140,3 +144,19 @@ class UserNotification{
   }
 }
 
+class Addresses{
+
+  String id,location;
+
+  Addresses({
+    this.id,
+    this.location
+  });
+
+  factory Addresses.toObject(Map<String,dynamic> map){
+    return Addresses(
+      id: map["id"],
+      location: map["location"],
+    );
+  }
+}

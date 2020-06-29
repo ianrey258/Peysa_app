@@ -11,7 +11,6 @@ class DbUtil{
   static const Tbl_UserImg = 'user_img';
   static const Tbl_StoreImg = 'store_img';
   static const Tbl_ItemImg = 'item_img';
-  static const Tbl_BidItemImg = 'bidItem_img';
   static const Tbl_ApprovalImg = 'store_veriification_img';
   static const Tbl_Store = 'store';
   static const Tbl_StoreItem = 'item';
@@ -22,7 +21,6 @@ class DbUtil{
   static const Tbl_ItemTags = 'item_tags';
   static const Tbl_GioLocation = 'gio_address';
   static const Tbl_ItemRating = 'item_rating';
-
 
   Future<Database> get database async{
 
@@ -38,11 +36,10 @@ class DbUtil{
     String dbPath = join(databaseDirectory.path,'TempData.db');
     return await openDatabase(dbPath,version: 1,onCreate: (_db,version)async{
       await _db.execute('create table $Tbl_User (id TEXT,username Text,password TEXT ,userType Text)');
-      await _db.execute('create table $Tbl_UserAccount (id TEXT,userId TEXT,firstname TEXT,lastname TEXT,contactNo TEXT,gender TEXT,email TEXT,accountStatus TEXT)');
+      await _db.execute('create table $Tbl_UserAccount (id TEXT,userId TEXT,firstname TEXT,lastname TEXT,contactNo TEXT,gender TEXT,email TEXT,zipCode TEXT,accountStatus TEXT)');
       await _db.execute('create table $Tbl_UserImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_StoreImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_ItemImg (id TEXT,parentId TEXT,filename TEXT)');
-      await _db.execute('create table $Tbl_BidItemImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_ApprovalImg (id TEXT,parentId TEXT,filename TEXT)');
       await _db.execute('create table $Tbl_Store (id TEXT,accountId TEXT,storeName TEXT,storeInfo TEXT,storeAddress TEXT,storeRating TEXT,storeFollowers TEXT,storeVisited TEXT,storeStatus TEXT)');
       await _db.execute('create table $Tbl_StoreItem (id TEXT,itemName TEXT,itemPrice TEXT,itemDescription TEXT,itemStack TEXT,itemRating TEXT,tagId TEXT,categoryId TEXT,topupId TEXT)');
@@ -52,7 +49,6 @@ class DbUtil{
       await _db.execute('create table $Tbl_ItemCategory (id TEXT,categoryName TEXT)');
       await _db.execute('create table $Tbl_ItemTags (id TEXT,tagName TEXT)');
       await _db.execute('create table $Tbl_GioLocation (id TEXT,storeId TEXT,longitude TEXT,latitude TEXT)');
-      
     });
   }
 
@@ -79,7 +75,6 @@ class DbUtil{
       db.delete('$Tbl_ApprovalImg');
       db.delete('$Tbl_NotificationType');
       db.delete('$Tbl_StatusType');
-      db.delete('$Tbl_BidItemImg');
       //db.delete('$Tbl_ItemRating');
     }
   }

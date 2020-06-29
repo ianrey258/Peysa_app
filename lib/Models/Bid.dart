@@ -1,22 +1,20 @@
 
 class BidItem{
-  String id,bidItem,budgetMoney,bidStatus,ownerLocId,datetime;
+  String id,bidItem,sendLocation,datetime;
 
   BidItem({
     this.id,
     this.bidItem,
-    this.budgetMoney,
     this.datetime,
-    this.ownerLocId,
+    this.sendLocation,
   });
 
   factory BidItem.toObject(Map<String,dynamic> map){
     return BidItem( 
       id: map['id'],
       bidItem: map['bidItem'],
-      budgetMoney: map['budgetMoney'],
       datetime: map['datetime'],
-      ownerLocId: map['ownerLocId'],
+      sendLocation: map['sendLocation'],
     );
   }
 
@@ -24,33 +22,30 @@ class BidItem{
     return {
       'id':this.id,
       'bidItem':this.bidItem,
-      'budgetMoney':this.budgetMoney,
       'datetime':this.datetime,
-      'ownerLocId':this.ownerLocId,
+      'sendLocation':this.sendLocation,
     };
   }
 
   Map<String,dynamic> toMapWOid(){
     return {
       'bidItem':this.bidItem,
-      'budgetMoney':this.budgetMoney,
       'datetime':this.datetime,
-      'ownerLocId':this.ownerLocId,
+      'sendLocation':this.sendLocation,
     };
   }
 
 }
 
 class Bidders{
-  String id,bidItemId,accountId,suggestedItemId,isWinner,bidderLocId;
+  String id,bidItemId,accountId,suggestedItemId,requestStatus;
 
   Bidders({
     this.id,
     this.bidItemId,
     this.accountId,
     this.suggestedItemId,
-    this.isWinner,
-    this.bidderLocId,
+    this.requestStatus,
   });
 
   factory Bidders.toObject(Map<String,dynamic> map){
@@ -59,8 +54,7 @@ class Bidders{
       bidItemId: map['bidItemId'],
       accountId: map['accountId'],
       suggestedItemId: map['suggestedItemId'],
-      isWinner: map['isWinner'],
-      bidderLocId: map['bidderLocId'],
+      requestStatus: map['requestStatus'],
     );
   }
 
@@ -70,8 +64,7 @@ class Bidders{
       'bidItemId':this.bidItemId,
       'accountId':this.accountId,
       'suggestedItemId':this.suggestedItemId,
-      'isWinner':this.isWinner,
-      'bidderLocId':this.bidderLocId,
+      'requestStatus':this.requestStatus,
     };
   }
 
@@ -80,8 +73,7 @@ class Bidders{
       'bidItemId':this.bidItemId,
       'accountId':this.accountId,
       'suggestedItemId':this.suggestedItemId,
-      'isWinner':this.isWinner,
-      'bidderLocId':this.bidderLocId,
+      'requestStatus':this.requestStatus,
     };
   }
 
@@ -139,4 +131,76 @@ class BidChat{
     };
   }
 
+}
+
+class BidItemDetail{
+  String id,itemName,itemPriceorBudget,description;
+
+  BidItemDetail({
+    this.id,
+    this.itemName,
+    this.description,
+    this.itemPriceorBudget
+  });
+
+  factory BidItemDetail.toObject(Map<String,dynamic> map){
+    return BidItemDetail(
+      id: map['id'],
+      itemName: map['itemName'],
+      description: map['description'],
+      itemPriceorBudget: map['itemPriceorBudget'],
+    );
+  }
+
+  Map<String,dynamic> toMapWid(){
+    return {
+      'id':this.id,
+      'itemName':this.itemName,
+      'description':this.description,
+      'itemPriceorBudget':this.itemPriceorBudget,
+    };
+  }
+
+  Map<String,dynamic> toMapWOid(){
+    return {
+      'itemName':this.itemName,
+      'description':this.description,
+      'itemPriceorBudget':this.itemPriceorBudget,
+    };
+  }
+}
+
+class BidItemManager{
+  String ownerId,bidItemId,bidStatus;
+
+  BidItemManager({
+    this.ownerId,
+    this.bidItemId,
+    this.bidStatus,
+  });
+
+  factory BidItemManager.toObject(Map<String,dynamic> map){
+    return BidItemManager(
+      ownerId: map['ownerId'],
+      bidItemId: map['bidItemId'],
+      bidStatus: map['bidStatus'],
+    );
+  }
+
+  Map<String,dynamic> toMap(){
+    return {
+      'ownerId':this.ownerId,
+      'bidItemId':this.bidItemId,
+      'bidStatus':this.bidStatus,
+    };
+  }
+
+}
+
+class SenderType{
+  bool senderType;
+
+  SenderType({this.senderType});
+
+  factory SenderType.toObject(Map<String,dynamic> data) => SenderType(senderType: data['senderType']);
 }

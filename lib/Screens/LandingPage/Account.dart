@@ -21,12 +21,19 @@ class Accountstate extends State<Account>{
   bool hasStore = false,refresh = true;
   Store store = Store();
   String storeBtnTxt = 'Edit';
+  Map addresses = {};
 
   @override
   initState(){
     super.initState();
     setState(() {
     });
+    initAddresses();
+  }
+
+  initAddresses() async {
+    addresses = await DataController.getAddresses();
+    refreshState();
   }
 
   refreshState(){
@@ -36,18 +43,24 @@ class Accountstate extends State<Account>{
   }
 
   Widget userinfo(String key,var value){
-    return Row(
-      children: <Widget>[
-        Text(key+' : '+value,style: TextStyle(fontSize: 15))
-      ],
+    return Container(
+      margin: EdgeInsets.only(bottom: 3.5),
+      child: Row(
+        children: <Widget>[
+          Text(key+' : ',style: TextStyle(fontWeight: FontWeight.w300,)),
+          Text(value),
+        ],
+      ),
     );
   }
 
-  Widget personalInfo(){
+  Widget personalInfo() {
+    String address = 'None';
     return FutureBuilder(
       future: DataController.getUserAccount(),
-      builder: (context,snapshot){
+      builder: (context,snapshot) {
         if(snapshot.connectionState ==  ConnectionState.done){
+          addresses.forEach((key, value) {if(value['id'] == snapshot.data['zipCode']){address= value['location'];}});
           return snapshot.hasData ? Card(
             margin: EdgeInsets.all(0),
             child: Container(
@@ -80,7 +93,9 @@ class Accountstate extends State<Account>{
                   userinfo('Name', snapshot.data['firstname']+' '+snapshot.data['lastname']),
                   userinfo('Gender', snapshot.data['gender']),
                   userinfo('Contact No.', snapshot.data['contactNo']),
-                  userinfo('Email Address', snapshot.data['email'])
+                  userinfo('Email Address', snapshot.data['email']),
+                  userinfo('Location', address),
+                  userinfo('Zip Code', snapshot.data['zipCode'])
                 ],
               ),
             ),
@@ -98,7 +113,7 @@ class Accountstate extends State<Account>{
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
           if(result.data.isNotEmpty){
-            return userinfo('GioLocation', '('+result.data['longitude'] +','+result.data['latitude'] +')');
+            return userinfo('Store GeoLocation', '('+result.data['latitude'] +','+result.data['longitude'] +')');
           }
           return userinfo('GioLocation', '(0,-0)');
         }
@@ -310,20 +325,6 @@ class Accountstate extends State<Account>{
   }
 }
 
-class ChangeProfilePic extends StatefulWidget {
-  @override
-  _ChangeProfilePicState createState() => _ChangeProfilePicState();
-}
-
-class _ChangeProfilePicState extends State<ChangeProfilePic> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      
-    );
-  }
-}
-
 class EditProfile extends StatefulWidget {
 
   @override
@@ -337,6 +338,7 @@ class _EditProfileState extends State<EditProfile> {
   GlobalKey<FormState> _key = new GlobalKey<FormState>();
   ScrollController sc;
   bool obscure = true,loadData = false;
+  var address = '';
 
 
   @override
@@ -361,20 +363,22 @@ class _EditProfileState extends State<EditProfile> {
     loadData = true;
   }
 
-  saveData(){
+  saveData() async {
+    Map addresses = await DataController.getAddresses();
+    addresses.forEach((key, value) {if(value['location'] == address){_userAccount.zipCode = value['id'];}});
     _user.username = text[0].text;
     _user.password = text[1].text;
     _userAccount.firstname = text[2].text;
     _userAccount.lastname = text[3].text;
     _userAccount.email = text[4].text;
     _userAccount.contactNo = text[5].text;
-    _userAccount.gender = text[6].text;    
+    _userAccount.gender = text[6].text;
   }
 
   validate() async {
     if(_key.currentState.validate()){
       _key.currentState.save();
-      saveData();
+      await saveData();
       LoadingScreen.showLoading(context, "Updating Data");
       await DataController.savingUserData(_user.toMapWid(), _userAccount.toMapWid());
       Navigator.pop(context);
@@ -410,6 +414,34 @@ class _EditProfileState extends State<EditProfile> {
       ),
     );
   }
+
+  Widget addressDropdown(){
+    return FutureBuilder<Map>(
+      future: DataController.getAddresses(),
+      builder: (context,snapshot){
+        if(snapshot.hasData && snapshot.data.isNotEmpty){
+          snapshot.data.forEach((key, value) {if(value['id'] == _userAccount.zipCode){address = value['location'];}});
+          return Container(
+            padding: EdgeInsets.all(10),
+            child: DropdownButtonFormField(
+              items: snapshot.data.values.toList().map(
+                (data){
+                  return DropdownMenuItem(
+                    value: data['location'],
+                    child: Text(data['location']));
+                }
+              ).toList(),
+              onChanged: (value){address = value;},
+              value: address ?? _userAccount.zipCode,
+            ),
+          );
+        } else {
+          return Container();
+        }
+      }
+    );
+  }
+
   Widget _radioGender(String value){
     return Radio(
       value: value,
@@ -448,6 +480,7 @@ class _EditProfileState extends State<EditProfile> {
       child: Form(
         key: _key,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(
               children: <Widget>[
@@ -477,6 +510,8 @@ class _EditProfileState extends State<EditProfile> {
             _textFormField("Contact No.",5,TextInputType.phone),
             _textFormField("Username",0,TextInputType.text),
             _textFormField("Password",1,TextInputType.text),
+            Text('  Location'),
+            addressDropdown()
           ],
         ),
       ),

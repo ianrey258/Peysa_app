@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pyesa_app/Screens/LandingPage/Account.dart';
 import 'package:pyesa_app/Screens/LandingPage/LandingPage.dart';
 import 'package:pyesa_app/Screens/LandingPage/Purchases.dart';
-import 'package:pyesa_app/Screens/LandingPage/Purchases.dart';
 import 'package:pyesa_app/Screens/LandingPage/Rating&Reviews.dart';
 import 'package:pyesa_app/Screens/LandingPage/Notification.dart';
 import 'package:pyesa_app/Screens/LandingPage/RequestItem.dart';
@@ -31,6 +30,7 @@ class MyApp extends StatelessWidget {
       title: 'Pyesa_App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        buttonColor: Colors.grey[300]
       ),
       initialRoute: _intialRoute,
       routes: <String ,WidgetBuilder>{

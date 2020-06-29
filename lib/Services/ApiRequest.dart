@@ -5,7 +5,7 @@ import 'dart:convert';
 class RequestUrl{
 
   static String get baseUrl{
-    return 'http://192.168.1.2/Hanapyesa/';
+    return 'http://192.168.10.2/Hanapyesa/';
   }
 }
 
@@ -170,12 +170,26 @@ class ApiRequest{
     }
   }
 
+  static Future<Map> deleteBidImage(Map<String,dynamic> data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/removeBidImage',body: data);
+      print(response.body);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } catch(e) {
+      return {};
+    } finally {
+      client.close();
+    }
+  }
+
   static Future<Map> loginUser(Map<String,dynamic> data) async {
     var client = http.Client();
     List result = [];
     try{
       var response = await client.post(_baseurl+'AccountController/fetchUser',body: data);
-      print(response.body);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       result.add({'result':'Unmatched Username or Password'});
@@ -206,7 +220,18 @@ class ApiRequest{
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'StoreController/fetchStore',body: data);
-      print(response.body.toString());
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getStores(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'StoreController/getStores',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -386,18 +411,6 @@ class ApiRequest{
     }
   }
 
-  static Future<Map> getAddress(data) async {
-    var client = http.Client();
-    try{
-      var response = await client.post(_baseurl+'StoreController/fetchAddress',body: data);
-      List jsonParse = json.decode(response.body);
-      Map datamap = jsonParse.asMap();
-      return datamap;
-    } finally {
-      client.close();
-    }
-  }
-
   static Future<Map> updateNotification(data) async {
     var client = http.Client();
     try{
@@ -422,10 +435,157 @@ class ApiRequest{
     }
   }
 
+  static Future<Map> getAddress(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'AccountController/fetchAddress',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchUsersbyLocation(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchUsersbyLocation',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertBidImage(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/insertBidImage',body: data);
+      print(response.body);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidImage(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/fetchBidImage',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> removeBidImage(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/removeBidImage',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } catch(e){
+      return {};
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> insertBidItemDetail(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/insertBidItemDetail',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidItemDetail(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidItemDetail',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getBidItemDetails(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/getBidItemDetails',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getOthersBidItemDetails(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/getOthersBidItemDetails',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getBiddersSuggestedItem(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/getBiddersSuggestedItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> getBidItemImages(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'ImageController/getBidItemImages',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
   static Future<Map> insertBidItem(data) async {
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'BidController/insertBidItem',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidItems(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidItems',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
@@ -446,10 +606,34 @@ class ApiRequest{
     }
   }
 
+  static Future<Map> getOtherBidItems(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/getOtherBidItems',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
   static Future<Map> insertBidItemManager(data) async {
     var client = http.Client();
     try{
       var response = await client.post(_baseurl+'BidController/insertBidItemManager',body: data);
+      List jsonParse = json.decode(response.body);
+      Map datamap = jsonParse.asMap();
+      return datamap;
+    } finally {
+      client.close();
+    }
+  }
+
+  static Future<Map> fetchBidItemManager(data) async {
+    var client = http.Client();
+    try{
+      var response = await client.post(_baseurl+'BidController/fetchBidItemManager',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;

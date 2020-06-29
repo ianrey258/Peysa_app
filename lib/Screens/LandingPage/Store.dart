@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:pyesa_app/Models/Item.dart';
 import 'package:pyesa_app/Models/Store.dart';
 import 'package:pyesa_app/Models/image.dart';
 import 'package:pyesa_app/Screens/LandingPage/LandingPage.dart';
 import 'package:pyesa_app/Controller/Controller.dart';
 import 'package:pyesa_app/Models/User.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:toast/toast.dart';
 import 'dart:math';
 import 'dart:io';
@@ -22,7 +21,6 @@ class MyStore extends StatefulWidget {
 
 class MyStorestate extends State<MyStore> {
   ScrollController _sc;
-  GlobalKey<FormState> _key;
   List<TextEditingController> text = [];
   Store store = Store();
   UserAccount user = UserAccount();
@@ -31,7 +29,6 @@ class MyStorestate extends State<MyStore> {
   @override
   initState() {
     super.initState();
-    _key = GlobalKey<FormState>();
     setState(() {
       for (int i=0;i<10;i++) {
         text.add(new TextEditingController());
@@ -42,7 +39,7 @@ class MyStorestate extends State<MyStore> {
 
   getPicture(source) async {
     var imageFile = await ImagePicker.pickImage(source: source);
-    imageFile != null ? await showAddItem(imageFile) : null;
+    if(imageFile != null) await showAddItem(imageFile);
   }
 
   Future<bool> showAddItem(picture) {
@@ -143,7 +140,6 @@ class MyStorestate extends State<MyStore> {
       }
     );
   }
-
   
   Widget giolocation(){
     return FutureBuilder(
@@ -151,12 +147,24 @@ class MyStorestate extends State<MyStore> {
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
           if(result.data.isNotEmpty){
-            return Text('GioLocation : ('+result.data['longitude'] +','+result.data['latitude'] +')');
+            return textHolder('Store GeoLocation : ',result.data['latitude'] +','+result.data['longitude']);
           }
           return Text('GioLocation : (0,-0)');
         }
         return Text('GioLocation : (0,-0)');
       },
+    );
+  }
+
+  Widget textHolder(String title,String text){
+    return Container(
+      margin: EdgeInsets.only(bottom: 3.5),
+      child: Row(
+        children: [
+          Text(title,style: TextStyle(fontWeight: FontWeight.w300,)),
+          Text(text),
+        ],
+      ),
     );
   }
 
@@ -170,13 +178,14 @@ class MyStorestate extends State<MyStore> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 SizedBox(height: 30),
-                Text("Store Name : "+result.data['storeName']),
-                Text("Address : "+result.data['storeAddress']),
-                Text("Following : "+result.data['storeFollowers']),
-                Text("Description:"+result.data['storeInfo']),
+                textHolder("Store Name : ",result.data['storeName']),
+                textHolder("Address : ",result.data['storeAddress']),
+                textHolder("Followers :",result.data['storeFollowers']),
+                textHolder("Description : ",result.data['storeInfo']),
                 giolocation(),
-                Text("Ratings: "+result.data['storeRating']),
-                Text("Photos:"),
+                textHolder("Ratings : ",result.data['storeRating']),
+                SizedBox(height: 10,),
+                textHolder("Photos : ",''),
                 storePhotos(),
                 SizedBox(height: 10),
               ],
@@ -267,7 +276,7 @@ class MyStorestate extends State<MyStore> {
           ),
           Row(
               children: <Widget>[
-                Text("Overview"),
+                Text("  Overview",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20)),
                 Expanded(
                   child: Divider(),
                 )
@@ -308,7 +317,7 @@ class MyStorestate extends State<MyStore> {
           ),
           Row(
             children: <Widget>[
-              Text("Item Sells"),
+              Text("  Item Sells",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20)),
               Expanded(
                 child: Divider(),
               )
@@ -1029,37 +1038,40 @@ class _EditStoreItemState extends State<EditStoreItem> {
 }
 
 class OtherStore extends StatefulWidget {
-  final int id;
-  OtherStore({Key key,this.id}):super(key: key);
+  // final Map store;
+  // OtherStore({Key key, this.store}):super(key: key);
+
   OtherStoreState createState() => OtherStoreState();
 }
 
 class OtherStoreState extends State<OtherStore> {
   ScrollController _sc;
   Store store;
+  List<Widget> items = [];
 
   @override
   initState(){
     super.initState();
   }
 
-  Future<bool> showItemDetail(Item item) async {
+  Future<Null> refreshStore() async {
+    await Future.delayed(Duration(seconds: 1));
+  }
+
+  Future<bool> showItemDetail(item) async {
     return await showDialog(
       context: context,
       builder: (_) {
-        return ShowItemDetail(item: item,quantity: 0,isEdit: false,);
+        return ShowItemDetail(item: item);
         }
       );
   }
 
-  Widget products(Item item){
+  Widget products(StoreItem item,ImageData image){
     return Container(
       margin: EdgeInsets.all(5),
       child: ListTile(
-        leading: Image.asset(
-          item.images[item.id].itemImg,
-          fit: BoxFit.fill,
-        ),
+        leading: Image.network(ImageController.getItemNetImage(image.filename)),
         title: Text(item.itemName),
         subtitle: Text(item.itemDescription),
         trailing: Column(
@@ -1068,57 +1080,71 @@ class OtherStoreState extends State<OtherStore> {
             Text("P"+item.itemPrice.toString(),style: TextStyle(fontSize: 15),),
           ],
         ),
-        onTap: (){showItemDetail(item);},
+        onTap: (){showItemDetail(item.toMapWid());},
       ),
     );
   }
 
+  List<Widget> generateItems(items,images){
+    List<Widget> listitem = [];
+    for(int i = 0;i<items.length;i++){
+      listitem.add(products(StoreItem.toObject(items[i]),ImageData.toObject(images[i])));
+    }
+    return listitem;
+  }
+
   Widget build(BuildContext context) {
+    store = ModalRoute.of(context).settings.arguments;
     var size = MediaQuery.of(context).size;
     return Scaffold(
-      body: CustomScrollView(
-        controller: _sc,
-        slivers: <Widget>[
-          SliverAppBar(
-            expandedHeight: 200,
-            flexibleSpace: Image.asset(
-              'assets/Store/StoreProfile.jpg',
-              fit: BoxFit.fill,
-            ),
-          ),
-          SliverList(
-              delegate: SliverChildListDelegate([
-            Row(
-              children: <Widget>[
-              Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text("Following: "+store.storeFollowers),
-                )
-              ),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text("Rate: "+store.storeRating),
-                )
-              ),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text("Visited: "+store.storeVisited),
-                )
-              ),
-            ]),
-            SizedBox(height: size.height*.02,),
-            products(Item.getItemList()[0]),
-            products(Item.getItemList()[1]),
-            products(Item.getItemList()[2]),
-            products(Item.getItemList()[3]),
-            products(Item.getItemList()[4]),
-            products(Item.getItemList()[5]),
-            products(Item.getItemList()[0]),
-          ]))
-        ],
+      body: RefreshIndicator(
+        child: FutureBuilder(
+          future: DataController.getFullStoreDetails(store.id),
+          builder: (_,snapshot){
+            if(snapshot.connectionState == ConnectionState.done){
+              if(snapshot.hasData){
+                return CustomScrollView(
+                  controller: _sc,
+                  slivers: <Widget>[
+                    SliverAppBar(
+                      expandedHeight: MediaQuery.of(context).size.height*.3,
+                      flexibleSpace: snapshot.data[1].isNotEmpty? Image.network(ImageController.getStoreNetImage(snapshot.data[1]['filename']),fit: BoxFit.cover,) : 
+                        Container(decoration: BoxDecoration(color: Colors.blueAccent),),
+                    ),
+                    SliverList(
+                      delegate: SliverChildListDelegate([
+                      Row(
+                        children: <Widget>[
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Text("Following: "+store.storeFollowers),
+                          )
+                        ),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Text("Rate: "+store.storeRating),
+                          )
+                        ),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Text("Visited: "+store.storeVisited),
+                          )
+                        ),
+                      ]),
+                      SizedBox(height: size.height*.02,),
+                      Column(children: generateItems(snapshot.data[2],snapshot.data[3]),)
+                    ]))
+                  ],
+                );
+              }
+            }
+            return Container();
+          }
+        ), 
+        onRefresh: refreshStore
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {Navigator.pushNamed(context, 'Cart');},
@@ -1288,7 +1314,7 @@ class _EditStoreState extends State<EditStoreDetail> {
   List<TextEditingController> text = []; 
   GlobalKey<FormState> _key = new GlobalKey<FormState>();
   Store _store = Store();
-  GioLocation _gioLocation = GioLocation();
+  GioLocation _geoLocation = GioLocation();
   List<ImageData> storeImage = []; 
   ScrollController sc;
   bool loadStore = false,loadlocation = false,loadStoreImages = false,refresh = true;
@@ -1303,12 +1329,20 @@ class _EditStoreState extends State<EditStoreDetail> {
     });
   }
 
+  getLocation() async {
+    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      _geoLocation.longitude = position.longitude.toString();
+      _geoLocation.latitude = position.latitude.toString();
+    });
+  }
+
   validate() async {
     if(_key.currentState.validate()){
       _key.currentState.save();
       savingDetail();
       LoadingScreen.showLoading(context, 'Saving Store');
-      await DataController.savingStoreDetail(_store.toMapWid(), _gioLocation.toMapWid());
+      await DataController.savingStoreDetail(_store.toMapWid(), _geoLocation.toMapWid());
       Navigator.pop(context);
       await LoadingScreen.showResultDialog(context, 'Data Saved!', 25);
       Navigator.pop(context);
@@ -1342,28 +1376,20 @@ class _EditStoreState extends State<EditStoreDetail> {
     );
   }
 
-  findLocation(){
-    setState(() {
-      _gioLocation.longitude = (Random().nextInt(10000) / Random().nextInt(100)).toStringAsFixed(5);
-      _gioLocation.latitude = (Random().nextInt(10000) / Random().nextInt(100)).toStringAsFixed(5);
-    });
-    //print(_gioLocation.toMapWid());
-  }
-
   Widget location(){
     return FutureBuilder(
       future: DataController.getLocation(),
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
-          if(!loadlocation){_gioLocation =GioLocation.toOject(result.data);}
+          if(!loadlocation){_geoLocation =GioLocation.toOject(result.data);}
           loadlocation = true;
           return Container(
             child: Row(
               children: <Widget>[
-                Text('Store Giolocation : ('+_gioLocation.longitude+','+_gioLocation.latitude+')'),
+                Text('Store Geolocation : ('+_geoLocation.latitude+','+_geoLocation.longitude+')'),
                 Expanded(child: Container()),
                 RaisedButton(
-                  onPressed: findLocation,
+                  onPressed: getLocation,
                   child: Text('Set Location'),
                 )
               ]
@@ -1492,11 +1518,12 @@ class _EditStoreState extends State<EditStoreDetail> {
   }
 
   Widget storePicture(){
-    return FutureBuilder(
+    return FutureBuilder<List>(
       future: ImageController.getStoreImages(),
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
           if(result.hasData){
+            loadStoreImage(result.data);
             return Container(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
