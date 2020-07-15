@@ -36,13 +36,13 @@ class Notificationstate extends State<Notifications>{
   void notBtn(UserNotification data) async {
     data.status = '9';
     if(notificationType[0]['id'] == data.notificationType){
-      Navigator.popAndPushNamed(context, 'Bidding');
+      Navigator.popAndPushNamed(context, 'RequestItem');
     } else if(notificationType[1]['id'].toString() == data.notificationType){
       Navigator.popAndPushNamed(context, 'MyStore');
     } else if(notificationType[2]['id'] == data.notificationType){
       Navigator.popAndPushNamed(context, 'Purchases');
     } else if(notificationType[3]['id'] == data.notificationType){
-      Navigator.popAndPushNamed(context, 'Bidding');
+      Navigator.popAndPushNamed(context, 'RequestItem');
     } else if(notificationType[4]['id'] == data.notificationType){
       return null;
     }

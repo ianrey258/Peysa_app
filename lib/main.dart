@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         'Cart' : (BuildContext context) => Cart(),
         'RequestItem' : (BuildContext context) => RequestItem(),
         'Bidding' : (BuildContext context) => Bidding(),
-        'BidChat' : (BuildContext context) => BidChat(),
+        'BidChat' : (BuildContext context) => BidChatScreen(),
       },
     );
   }

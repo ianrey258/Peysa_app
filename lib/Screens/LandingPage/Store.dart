@@ -39,7 +39,12 @@ class MyStorestate extends State<MyStore> {
 
   getPicture(source) async {
     var imageFile = await ImagePicker.pickImage(source: source);
-    if(imageFile != null) await showAddItem(imageFile);
+    imageFile != null && imageFile.lengthSync()<5000000 ? await showAddItem(imageFile):invalidImageSize();
+  }
+
+  invalidImageSize() async {
+    Navigator.pop(context);
+    LoadingScreen.showResultDialog(context, 'Image Size Must not exceed to 5mb',20);
   }
 
   Future<bool> showAddItem(picture) {
@@ -116,25 +121,26 @@ class MyStorestate extends State<MyStore> {
       future: ImageController.getStoreImages(),
       builder: (_,result){
         if(result.connectionState == ConnectionState.done && result.hasData){
-          print(result.data[0]['filename']);
-          return SingleChildScrollView(
-            controller: _sc,
-            scrollDirection: Axis.horizontal,
-            child: Container(
-              child: Row(
-                children: result.data.map((e){
-                  return Container(
-                    padding: EdgeInsets.only(right: 10),
-                    child: Image.network(ImageController.getStoreNetImage(e['filename']),
-                    fit: BoxFit.fill,
-                    width: MediaQuery.of(context).size.width*.20,
-                    height: MediaQuery.of(context).size.height*.15,
-                    ),
-                  );
-                }).toList(),
-              )
-            ),
-          );
+          if(result.data.isNotEmpty){
+            return SingleChildScrollView(
+              controller: _sc,
+              scrollDirection: Axis.horizontal,
+              child: Container(
+                child: Row(
+                  children: result.data.map((e){
+                    return Container(
+                      padding: EdgeInsets.only(right: 10),
+                      child: Image.network(ImageController.getStoreNetImage(e['filename']),
+                      fit: BoxFit.fill,
+                      width: MediaQuery.of(context).size.width*.20,
+                      height: MediaQuery.of(context).size.height*.15,
+                      ),
+                    );
+                  }).toList(),
+                )
+              ),
+            );
+          }return Container();
         }
         return Container();
       }
@@ -240,21 +246,24 @@ class MyStorestate extends State<MyStore> {
     return FutureBuilder<List>(
       future: DataController.getStoreItem(),
       builder: (_,result){
-        if(result.connectionState == ConnectionState.done && result.hasData){
-          print(result.data.length);
-          print(result.data);
-          return Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: GridView.count(
-              crossAxisCount: 5,
-              children: result.data.map(
-                (data){
-                  return itemContainer(data);
-                }
-              ).toList(),
-            )
-          );
+        if(result.connectionState == ConnectionState.done){
+          if(result.hasData){
+            if(result.data.isNotEmpty){
+              return Container(
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+                child: GridView.count(
+                  crossAxisCount: 5,
+                  children: result.data.map(
+                    (data){
+                      return itemContainer(data);
+                    }
+                  ).toList(),
+                )
+              );
+            }
+            return Center(child: Text('No Item Yet'),);
+          }
         }
         return Container();
       }
@@ -454,16 +463,21 @@ class _RegisterItemState extends State<RegisterItem> {
       _key.currentState.save();
       text[4].text = await findIdCategory(cat);
       text[5].text = await findIdTag(tag);
-      LoadingScreen.showLoading(context, 'Registering Item');
-      var result = await DataController.registerItem(text,await file2Object());
-      Navigator.pop(context);
-      if(result == 'Item Registered'){
-        await LoadingScreen.showResultDialog(context, result, 20);
+      if((await file2Object()).isNotEmpty){
+        LoadingScreen.showLoading(context, 'Registering Item');
+        var result = await DataController.registerItem(text,await file2Object());
         Navigator.pop(context);
-        Navigator.popAndPushNamed(context,'MyStore');
-      } else {
-        await LoadingScreen.showResultDialog(context, result, 15);
+        if(result == 'Item Registered'){
+          await LoadingScreen.showResultDialog(context, result, 20);
+          Navigator.pop(context);
+          Navigator.popAndPushNamed(context,'MyStore');
+        } else {
+          await LoadingScreen.showResultDialog(context, result, 15);
+        }
+      }else {
+        await LoadingScreen.showResultDialog(context, 'Must Have 1 Sample for the Item To be registered', 15);
       }
+      
     }
   }
 
@@ -478,15 +492,22 @@ class _RegisterItemState extends State<RegisterItem> {
 
   _getPicture(source) async {
     File _item = await ImagePicker.pickImage(source: source);
-    setState(() {
-      if(_item != null){
+    print(_item.lengthSync);
+    if(_item != null && _item.lengthSync()<5000000){
+      setState(() {
         images.removeLast();
         images.add(_item);
         checkImages();
         refreshState();
-      }
-    });
+      });
+      Navigator.pop(context);
+    }
+    else{invalidImageSize();}
+  }
+
+  invalidImageSize() async {
     Navigator.pop(context);
+    LoadingScreen.showResultDialog(context, 'Image Size Must not exceed to 5mb',20);
   }
 
   Future<bool> chooseUpload(){
@@ -549,13 +570,13 @@ class _RegisterItemState extends State<RegisterItem> {
           padding: EdgeInsets.only(bottom: 50),
           child: Column(
             children: <Widget>[
-              Align(
+              images.length >2? Align(
                 alignment: Alignment.centerRight,
                 child: RaisedButton(
                   onPressed: (){deleteImage(image);},
                   child: Text('Remove'),
                 ),
-              ),
+              ):Container(),
               Expanded(
                 child: Image.file(image),
               )
@@ -742,6 +763,7 @@ class _EditStoreItemState extends State<EditStoreItem> {
         if(result.connectionState == ConnectionState.done && result.hasData){
           if(result.data.isNotEmpty){
             initImages(result.data);
+            print(result.data);
             return Container(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -1404,13 +1426,20 @@ class _EditStoreState extends State<EditStoreDetail> {
   getPicture(source) async {
     Navigator.pop(context);
     var image = await ImagePicker.pickImage(source: source);
-    if(image != null){
+    if(image != null && image.lengthSync()<5000000){
       ImageData storeImage = ImageData();
       storeImage.parentId = _store.id;
       storeImage.filename = Random().nextInt(10000000).toString()+'_'+image.path.split('/').last;
       storeImage.binaryfile = base64Encode(image.readAsBytesSync());
       addImage(storeImage.toMapWOidUpload());
+    }else {
+      invalidImageSize();
     }
+  }
+
+  invalidImageSize() async {
+    Navigator.pop(context);
+    LoadingScreen.showResultDialog(context, 'Image Size Must not exceed to 5mb', MediaQuery.of(context).textScaleFactor*15);
   }
 
   Future<bool> chooseImage(){

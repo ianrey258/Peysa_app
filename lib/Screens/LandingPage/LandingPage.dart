@@ -614,9 +614,16 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
     });
   }
 
+  imageContainer(filename){
+    return Container(
+      margin: EdgeInsets.only(right: 10),
+      child: Image.network(ImageController.getItemNetImage(filename),fit: BoxFit.fill,),
+    );
+  }
+
   getImages() async {
     Map data = await ImageController.getItemImages(widget.item['id']);
-    data.forEach((key,value) => images.add(Image.network(ImageController.getItemNetImage(value['filename']),fit: BoxFit.fill,)));
+    data.forEach((key,value) => images.add(imageContainer(value['filename'])));
     refreshState();
   }
 
@@ -740,7 +747,7 @@ class ShowItemDetailstate extends State<ShowItemDetail> {
                 IconButton(
                   padding: EdgeInsets.all(0),
                   icon: Icon(Icons.add_circle_outline), onPressed: (){setState(() {
-                    if(qty<= int.parse(widget.item['itemStack'])){
+                    if(qty< int.parse(widget.item['itemStack'])){
                       qty +=1;
                       text.text = qty.toString();
                       totalprice = qty*itemPrice;

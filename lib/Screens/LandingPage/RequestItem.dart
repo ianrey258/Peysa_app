@@ -127,7 +127,9 @@ class RequestItemstate extends State<RequestItem>{
           )
         ],
       ),
-      trailing: IconButton(icon: otherBidItem['requestStatus'] == '12' || bidManager['bidStatus'] != '5' ? Icon(Icons.message,size: 45,color: Colors.green[200],) : Icon(Icons.message,size: 45,color: Colors.green,), onPressed: otherBidItem['requestStatus'] == '12' || bidManager['bidStatus'] != '5' ? null: (){}),
+      trailing: IconButton(icon: otherBidItem['requestStatus'] == '12' || bidManager['bidStatus'] != '5' ? Icon(Icons.message,size: 45,color: Colors.green[200],) : Icon(Icons.message,size: 45,color: Colors.green,), onPressed: otherBidItem['requestStatus'] == '12' || bidManager['bidStatus'] != '5' ? null : (){
+        Navigator.of(context).pushNamed('BidChat',arguments :BidChatDataHolder(user: UserAccount.toObject(userDetail), bidItem: BidItem.toObject(bidItem)));
+      }),
       onTap: (){requestFeedbackDialog(otherBidItem,itemDetail,userDetail);},
     );
   }
@@ -999,22 +1001,20 @@ class _BiddingState extends State<Bidding> {
       future: DataController.getBidderDetails(userId,suggestId),
       builder: (_,snapshot){
         if(snapshot.connectionState == ConnectionState.done && snapshot.hasData){
-          print(snapshot.data);
           return ListTile(
             contentPadding: EdgeInsets.all(5),
             leading: CircleAvatar(
               radius: 35,
-              backgroundColor: Colors.blue,
+              backgroundColor: Colors.white,
               child: ClipOval(
-                child: snapshot.data[2].isNotEmpty ? Image.network(ImageController.getUserNetImage(snapshot.data[2][0]['filename']),fit: BoxFit.cover,width:53,) : Icon(FontAwesome.user_circle_o,color: Colors.white,size: 50,),
+                child: snapshot.data[2].isNotEmpty ? Image.network(ImageController.getUserNetImage(snapshot.data[2][0]['filename']),fit: BoxFit.cover,width:53,) : Icon(FontAwesome.user_circle_o,color: Colors.blue,size: 50,),
               ) 
             ),
             title: Text(''+snapshot.data[0]['firstname']+' '+snapshot.data[0]['lastname']),
             subtitle: Text("Item Price: P "+snapshot.data[1]['itemPriceorBudget']),
             trailing: IconButton(icon: Icon(Icons.message,size: 45,color: Colors.green,),
               onPressed: (){
-                ImageData image =ImageData.toObject(snapshot.data[2][0]);
-                Navigator.pushNamed(context, "BidChat",arguments: BidChatDataHolder(user: UserAccount.toObject(snapshot.data[0]),image: image ,bidItem: BidItem.toObject({'bidItemId':bidItemId}),senderType: SenderType(senderType: false),));
+                Navigator.pushNamed(context, "BidChat",arguments: BidChatDataHolder(user: UserAccount.toObject(snapshot.data[0]) ,bidItem: BidItem.toObject({'id':bidItemId})));
                 
               }),
             onTap: (){itemDetail(snapshot.data[1],snapshot.data[3],snapshot.data[2]);},
@@ -1063,13 +1063,13 @@ class _BiddersItemDetailState extends State<BiddersItemDetail> {
   }
 
   List images(){
-    List images = [];
+    List<Widget> images = [];
      widget.images.forEach((key, value) {images.add(sampleImage(value['filename']));});
      return images;
   }
 
   List<Widget> getImages(){
-    return widget.images.isEmpty ? [Center(child: Text("No Sample Image"))] : images;
+    return widget.images.isEmpty ? [Center(child: Text("No Sample Image"))] : images();
   }
 
   Future<bool> imageFullSize(image){
@@ -1081,7 +1081,7 @@ class _BiddersItemDetailState extends State<BiddersItemDetail> {
           child: Column(
             children: <Widget>[
               Expanded(
-                child: Image.file(image),
+                child: Image.network(ImageController.getItemNetImage(image),fit: BoxFit.contain,),
               )
             ],
           ),
@@ -1136,9 +1136,11 @@ class _BiddersItemDetailState extends State<BiddersItemDetail> {
           children: [
             Divider(),
             userImage(),
+            SizedBox(height: 5,),
             Expanded(
               child: itemImages()
             ),
+            SizedBox(height: 5,),
             textContainer('Item Name',widget.item['itemName']),
             textContainer('Condition',widget.item['description']),
             textContainer('Price',widget.item['itemPriceorBudget']),
@@ -1150,18 +1152,17 @@ class _BiddersItemDetailState extends State<BiddersItemDetail> {
   }
 }
 
-class BidChat extends StatefulWidget {
-
+class BidChatScreen extends StatefulWidget {
   @override
-  _BidChatState createState() => _BidChatState();
+  _BidChatScreenState createState() => _BidChatScreenState();
 }
 
-class _BidChatState extends State<BidChat> {
-  BidChatDataHolder dataHolder = BidChatDataHolder();
+class _BidChatScreenState extends State<BidChatScreen> {
+  BidChatDataHolder dataHolder;
   ScrollController _sc;
   TextEditingController text = TextEditingController();
-  List<Widget> conversation =[];
   bool init = true,refresh = true;
+  String userImage = 'No Image';
 
   @override
   initState(){
@@ -1174,48 +1175,74 @@ class _BidChatState extends State<BidChat> {
     setState(()=>refresh = refresh ? false : true);
   }
 
+  Future<Null> refreshMessage() async {
+    Future.delayed(Duration(seconds: 1));
+  }
+
+  generateUserImg() async {
+    Map image = await ImageController.fetchUserImage(dataHolder.user.id);
+    userImage = image.isNotEmpty && image[0]['filename'] != 'null' ? image[0]['filename'] : '';
+    refreshState();
+  }
+
   Widget other(text){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        Container(
-          padding: EdgeInsets.all(10),
-          margin: EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30)
-          ),
-          child: Text(text),
-        )
-      ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        width: MediaQuery.of(context).size.width*.8,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              width: text.length > 50 ? MediaQuery.of(context).size.width*.7:null,
+              padding: EdgeInsets.all(10),
+              margin: EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(20),bottomLeft: Radius.circular(10),bottomRight: Radius.circular(20))
+              ),
+              child: Text(text,softWrap: true,textAlign: TextAlign.left)
+            )
+          ],
+        ),
+      )
     );
   }
 
   Widget you(text){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: <Widget>[
-        Container(
-          padding: EdgeInsets.all(10),
-          margin: EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(30)
-          ),
-          child: Text(text,softWrap: true,),
-        )
-      ],
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        width: MediaQuery.of(context).size.width*.8,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            Container(
+              width: text.length > 50 ? MediaQuery.of(context).size.width*.7:null,
+              padding: EdgeInsets.all(10),
+              margin: EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(20),topRight: Radius.circular(10),bottomLeft: Radius.circular(20),bottomRight: Radius.circular(10))
+              ),
+              child: Text(text,softWrap: true,textAlign: TextAlign.right)
+            )
+          ],
+        ),
+      )
     );
   }
 
-  List<Widget> conversationDisplay(){
-    print(conversation.length);
-    return conversation;
+  sendMessage() async {
+    BidChat message =  BidChat(bidItemId: dataHolder.bidItem.id,recieverId: dataHolder.user.id,senderId: dataHolder.user.id,message: text.text,messageType: '1',status: '9');
+    Map result = await DataController.insertBidderMessage(message);
+    if(result.containsKey('Connection')) LoadingScreen.showResultDialog(context, 'Cant Send to Internet Connection', 20);
+    text.text = "";
+    refreshState();
   }
 
   Widget inputText(){
-    return Material(
-      elevation: 10,
+    return Container(
       child: Row(
         children: <Widget>[
           IconButton(
@@ -1225,44 +1252,46 @@ class _BidChatState extends State<BidChat> {
           Expanded(
             child: TextField(
               controller: text,
+              maxLines: text.text.length > 22 ? 2 : text.text.length > 50 ? 3 : 1,
               decoration: InputDecoration(
-                hintText: "Text Here"
+                hintText: "Text Here",
               ),
             )
           ),
           IconButton(
             icon: Icon(FontAwesome.send),
-            onPressed: (){
-              setState(() {
-                conversation.add(you(text.text));
-                text.text = "";
-              });
-            }
+            onPressed: ()=>text.text != '' ? sendMessage() : null,
           )
         ],
       ),
     );
   }
 
-  setData(argu){
-    setState(() {
-      conversation.add(other("Hi!"));
-      conversation.add(you("Low"));
-      init = false;
-    });
-  }
-
   messageDisplay(){
-    return FutureBuilder(
-      future: DataController.getBidderMessage(dataHolder.bidItem.id, dataHolder.user.id,senderType: dataHolder.senderType.senderType),
-      builder: (_,snapshot){
-        if(snapshot.connectionState == ConnectionState.done){
-          if(snapshot.hasData){ 
-
+    return RefreshIndicator(
+      child: FutureBuilder<Map>(
+        future: DataController.getBidderMessage(dataHolder.bidItem.id, dataHolder.user.id),
+        builder: (_,snapshot){
+          if(userImage == 'No Image') generateUserImg();
+          if(snapshot.connectionState == ConnectionState.done){
+            if(snapshot.hasData){ 
+              List conversation = [];
+              if(snapshot.data.containsKey('Connection')) return Container(child: Text('No Internet Connection'),);
+              if(snapshot.data.isEmpty) return Container();
+              snapshot.data.forEach((key, value) => conversation.add(value));
+              return Container(
+                height: MediaQuery.of(context).size.height*.8,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: conversation.map((e) => e['senderId'] == dataHolder.user.id ? other(e['message']) : you(e['message'])).toList(),
+                ),
+              );
+            }
           }
+          return Container();
         }
-        return Container();
-      }
+      ), 
+      onRefresh: refreshMessage
     );
   }
 
@@ -1278,45 +1307,44 @@ class _BidChatState extends State<BidChat> {
               radius: 25,
               backgroundColor: Colors.blue,
               child: ClipOval(
-                child: dataHolder.image.filename != null ? Image.network(ImageController.getUserNetImage(dataHolder.image.filename),fit: BoxFit.cover,width:50,) : Icon(FontAwesome.user_circle_o,color: Colors.white,size: 60,),
+                child: userImage != '' && userImage != 'No Image'? Image.network(ImageController.getUserNetImage(userImage),fit: BoxFit.cover,width:50,) : Icon(FontAwesome.user_circle_o,color: Colors.white,size: 40,),
               ) 
             ),
             Text('\t\t'+dataHolder.user.firstname+' '+dataHolder.user.lastname)
           ],
-        )
+        ),
+        actions: <Widget>[
+          Container(
+            margin: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30)
+            ),
+            child: FlatButton(
+              onPressed: refreshState, 
+              child: Text("Refresh",style: TextStyle(fontSize: 18),)
+            ),
+          )
+        ],
       ),
       body: Container(
         height: MediaQuery.of(context).size.height,
         child: Column(
           children: <Widget>[
             Expanded(
-              child: Container(
-                height: MediaQuery.of(context).size.height*.8,
-                child: ListView.builder(
-                  controller: _sc,
-                  reverse: true,
-                  itemCount: 1,
-                  itemBuilder: (context,item){
-                    return Column(
-                      children: conversationDisplay(),
-                    );
-                  },
-                )
-              )
+              child: messageDisplay() 
             ),
+            inputText()
           ],
         ),
       ),
-      bottomSheet: inputText(),
     );
   }
 }
 
 class BidChatDataHolder{
   UserAccount user;
-  ImageData image;
   BidItem bidItem;
-  SenderType senderType; 
   
-  BidChatDataHolder({this.user,this.image,this.bidItem,this.senderType});
+  BidChatDataHolder({this.user,this.bidItem});
 }

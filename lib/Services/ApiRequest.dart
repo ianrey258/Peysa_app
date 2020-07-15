@@ -247,6 +247,8 @@ class ApiRequest{
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
+    } catch(e) {
+      return {};
     } finally {
       client.close();
     }
@@ -690,13 +692,15 @@ class ApiRequest{
     }
   }
 
-  static Future<Map> fetchBidChats(data) async {
+  static Future<Map> getBidChat(data) async {
     var client = http.Client();
     try{
-      var response = await client.post(_baseurl+'BidController/fetchBidChats',body: data);
+      var response = await client.post(_baseurl+'BidController/getBidChat',body: data);
       List jsonParse = json.decode(response.body);
       Map datamap = jsonParse.asMap();
       return datamap;
+    } catch(e){
+      return {};
     } finally {
       client.close();
     }
