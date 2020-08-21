@@ -12,13 +12,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-class HpController{
-  
+class HpController {
   static Future<bool> reApprove(ImageData image) async {
     Map accountUser = await DataController.getUserAccount();
     Map approval = await ApiRequest.uploadApprovalImage(image.toMapWidUpload());
-    Map store = await ApiRequest.getStore({'accountId':accountUser['id']});
-    if(approval.isNotEmpty){
+    Map store = await ApiRequest.getStore({'accountId': accountUser['id']});
+    if (approval.isNotEmpty) {
       await DbAccess.dropTable(DbUtil.Tbl_Store);
       await DbAccess.dropTable(DbUtil.Tbl_ApprovalImg);
       await DbAccess.insertData(store[0], DbUtil.Tbl_Store);
@@ -29,12 +28,13 @@ class HpController{
 
   static Future<Map> loginUser(List text) async {
     DbUtil _dbUtil = DbUtil();
-    UserCredential user = UserCredential(username: text[0].text,password: text[1].text,userType: 'User');
+    UserCredential user = UserCredential(
+        username: text[0].text, password: text[1].text, userType: 'User');
     Map result = await ApiRequest.loginUser(user.toMapWOid());
     _dbUtil.dropAllTable();
-    if(result[1].isNotEmpty){
-      Map<String,dynamic> mapConverted = result[1][0];
-      await DbAccess.insertData(mapConverted,DbUtil.Tbl_User);
+    if (result[1].isNotEmpty) {
+      Map<String, dynamic> mapConverted = result[1][0];
+      await DbAccess.insertData(mapConverted, DbUtil.Tbl_User);
       await DataController.loadUserData();
       SharedPref.setLogin(true);
     }
@@ -53,80 +53,124 @@ class HpController{
 
   static Future<bool> hasStore() async {
     Map accountUser = await DataController.getUserAccount();
-    Map newStoreData = await ApiRequest.getStore({'accountId': accountUser['id']});
-    if(newStoreData.isNotEmpty){
+    Map newStoreData =
+        await ApiRequest.getStore({'accountId': accountUser['id']});
+    if (newStoreData.isNotEmpty) {
       await DbAccess.dropTable(DbUtil.Tbl_Store);
       await DbAccess.insertData(newStoreData[0], DbUtil.Tbl_Store);
     }
-    return DbAccess.getDataList(DbUtil.Tbl_Store).then((value) => value.isNotEmpty);
+    return DbAccess.getDataList(DbUtil.Tbl_Store)
+        .then((value) => value.isNotEmpty);
   }
 
-  static Future<bool> hasConnection() async { 
+  static Future<bool> hasConnection() async {
     return await ApiRequest.testConnection();
   }
-
 }
 
 class DataController {
-  
   static Future<bool> registerUser(List text) async {
-    UserCredential user = UserCredential(username: text[0].text,password: text[1].text,userType: 'User');
+    UserCredential user = UserCredential(
+        username: text[0].text, password: text[1].text, userType: 'User');
     String result = await ApiRequest.registerUser(user.toMapWOid());
-    if(result != 'null'){
-      UserAccount userAccount = UserAccount(userId: result,firstname: text[2].text,lastname: text[3].text,gender: text[6].text,
-                              email: text[4].text,contactNo: text[5].text,zipCode: '0',accountStatus: '1');
+    if (result != 'null') {
+      UserAccount userAccount = UserAccount(
+          userId: result,
+          firstname: text[2].text,
+          lastname: text[3].text,
+          gender: text[6].text,
+          email: text[4].text,
+          contactNo: text[5].text,
+          zipCode: '0',
+          accountStatus: '1');
       await ApiRequest.registerAccount(userAccount.toMapWOid());
     }
     return result != 'null' ? true : false;
   }
 
-  static Future<bool> registerStore(List text,ImageData image) async {
+  static Future<bool> registerStore(List text, ImageData image) async {
     Map accountUser = await DataController.getUserAccount();
-    Store store = Store(accountId: accountUser['id'],storeName: text[0].text,storeInfo: text[1].text,storeAddress: text[2].text,
-                          storeFollowers: '0',storeRating: '0',storeStatus: '15',storeVisited: '0');
+    Store store = Store(
+        accountId: accountUser['id'],
+        storeName: text[0].text,
+        storeInfo: text[1].text,
+        storeAddress: text[2].text,
+        storeFollowers: '0',
+        storeRating: '0',
+        storeStatus: '15',
+        storeVisited: '0');
     Map result = await ApiRequest.registerStore(store.toMapWOid());
-    Map result2 = await ApiRequest.getStoreAprovalImage({'parentId':result['id']});
-    image.parentId = result['id'];image.id = result2[0]['id'];
+    Map result2 =
+        await ApiRequest.getStoreAprovalImage({'parentId': result['id']});
+    image.parentId = result['id'];
+    image.id = result2[0]['id'];
     Map result3 = await ApiRequest.uploadApprovalImage(image.toMapWidUpload());
-    if(result3.isNotEmpty){
+    if (result3.isNotEmpty) {
       await DbAccess.insertData(result, DbUtil.Tbl_Store);
       await DbAccess.insertData(result3[0], DbUtil.Tbl_ApprovalImg);
     }
     return result3.isNotEmpty;
   }
 
-  static Future<String> registerItem(List text,List images) async {
-    Map data = StoreItem(itemName: text[0].text,itemStack: text[1].text,itemPrice: text[2].text,itemDescription: text[3].text,
-                          categoryId: text[4].text,tagId: text[5].text,itemRating: '0',topupId: '1').toMapWOid();
+  static Future<String> registerItem(List text, List images) async {
+    Map data = StoreItem(
+            itemName: text[0].text,
+            itemStack: text[1].text,
+            itemPrice: text[2].text,
+            itemDescription: text[3].text,
+            categoryId: text[4].text,
+            tagId: text[5].text,
+            itemRating: '0',
+            topupId: '1')
+        .toMapWOid();
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
     Map item = {};
-    if(await HpController.hasConnection()){
+    if (await HpController.hasConnection()) {
       item = await ApiRequest.insertItem(data);
-      if(item.isNotEmpty){
+      if (item.isNotEmpty) {
         await DbAccess.dropTable(DbUtil.Tbl_StoreItem);
-        await ApiRequest.insertStoreItem({'storeId':store['id'],'itemId':item[0]['id']});
-        Map storeitem = await ApiRequest.getStoreItem({'id':store['id']});
-        if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
-      }
-    }
-    return await ImageController.addStoreItemImages(images,item[0]['id']);
-  }
-
-  static Future<String> removeItem(Map item,List images) async {
-    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
-      if(images.isNotEmpty){
-        for(int i=0;i<images.length;i++){
-          await ApiRequest.deleteItemImage({'table':DbUtil.Tbl_ItemImg,'id':images[i].id,'filename':images[i].filename});
+        await ApiRequest.insertStoreItem(
+            {'storeId': store['id'], 'itemId': item[0]['id']});
+        Map storeitem = await ApiRequest.getStoreItem({'id': store['id']});
+        if (storeitem.isNotEmpty) {
+          storeitem.forEach((key, value) async {
+            await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);
+          });
         }
       }
-      await ApiRequest.deleteData({'table':DbUtil.Tbl_StoreItem,'id':item['id']});
+    }
+    return await ImageController.addStoreItemImages(images, item[0]['id']);
+  }
+
+  static Future<String> removeItem(Map item, List images) async {
+    Map store = await DbAccess.getData(DbUtil.Tbl_Store);
+    if (await HpController.hasConnection()) {
+      if (images.isNotEmpty) {
+        for (int i = 0; i < images.length; i++) {
+          await ApiRequest.deleteItemImage({
+            'table': DbUtil.Tbl_ItemImg,
+            'id': images[i].id,
+            'filename': images[i].filename
+          });
+        }
+      }
+      await ApiRequest.deleteData(
+          {'table': DbUtil.Tbl_StoreItem, 'id': item['id']});
       await DbAccess.dropTable(DbUtil.Tbl_StoreItem);
       await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-      Map storeitem = await ApiRequest.getStoreItem({'id':store['id']});
-      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
-      if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
-      if(storeItemImage.isNotEmpty){storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});}
+      Map storeitem = await ApiRequest.getStoreItem({'id': store['id']});
+      Map storeItemImage =
+          await ApiRequest.getStoreItemImage({'id': store['id']});
+      if (storeitem.isNotEmpty) {
+        storeitem.forEach((key, value) async {
+          await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);
+        });
+      }
+      if (storeItemImage.isNotEmpty) {
+        storeItemImage.forEach((key, value) async {
+          await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);
+        });
+      }
       return 'Item Deleted';
     }
     return 'Cannot Delete Item Due to Connection';
@@ -134,29 +178,64 @@ class DataController {
 
   static Future<void> loadUserData() async {
     Map user = await DbAccess.getData(DbUtil.Tbl_User);
-    Map userAccount = await ApiRequest.getUserAccount({'userId':user['id']});
-    Map imageData = await ApiRequest.getUserImage({'parentId':userAccount[0]['id']});
-    Map notification = await ApiRequest.getNotification({'userId':userAccount[0]['id']});
-    Map store = await ApiRequest.getStore({'accountId':userAccount[0]['id']});
-    if(userAccount.isNotEmpty){await DbAccess.insertData(userAccount[0],DbUtil.Tbl_UserAccount);}
-    if(imageData.isNotEmpty){await DbAccess.insertData(imageData[0],DbUtil.Tbl_UserImg);}
-    if(notification.isNotEmpty){await DbAccess.insertData(notification[0], DbUtil.Tbl_Notification);}
+    Map userAccount = await ApiRequest.getUserAccount({'userId': user['id']});
+    Map imageData =
+        await ApiRequest.getUserImage({'parentId': userAccount[0]['id']});
+    Map notification =
+        await ApiRequest.getNotification({'userId': userAccount[0]['id']});
+    Map store = await ApiRequest.getStore({'accountId': userAccount[0]['id']});
+    print(user);
+    print(userAccount);
+    print(imageData);
+    print(store);
+    if (userAccount.isNotEmpty) {
+      await DbAccess.insertData(userAccount[0], DbUtil.Tbl_UserAccount);
+    }
+    if (imageData.isNotEmpty) {
+      await DbAccess.insertData(imageData[0], DbUtil.Tbl_UserImg);
+    }
+    if (notification.isNotEmpty) {
+      await DbAccess.insertData(notification[0], DbUtil.Tbl_Notification);
+    }
     await loadOtherData();
-    if(store.isNotEmpty){await loadStoreData(store);}
+    if (store.isNotEmpty) {
+      await loadStoreData(store);
+    }
   }
 
   static Future<void> loadStoreData(Map store) async {
-    Map location = await ApiRequest.getStoreLocation({'storeId':store[0]['id']});
-    Map storeImage = await ApiRequest.getStoreImage({'parentId':store[0]['id']});
-    Map approvalImage = await ApiRequest.getStoreAprovalImage({'parentId':store[0]['id']});
-    Map storeitem = await ApiRequest.getStoreItem({'id':store[0]['id']});
-    Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store[0]['id']});
-    if(store.isNotEmpty){await DbAccess.insertData(store[0], DbUtil.Tbl_Store);}
-    if(location.isNotEmpty){await DbAccess.insertData(location[0], DbUtil.Tbl_GioLocation);}
-    if(approvalImage.isNotEmpty){await DbAccess.insertData(approvalImage[0], DbUtil.Tbl_ApprovalImg);}
-    if(storeImage.isNotEmpty){storeImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreImg);});}
-    if(storeitem.isNotEmpty){storeitem.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);});}
-    if(storeItemImage.isNotEmpty){storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});}
+    Map location = await ApiRequest.getStoreLocation({'storeId': store[0]['id']});
+    Map storeImage =
+        await ApiRequest.getStoreImage({'parentId': store[0]['id']});
+    Map approvalImage =
+        await ApiRequest.getStoreAprovalImage({'parentId': store[0]['id']});
+    Map storeitem = await ApiRequest.getStoreItem({'id': store[0]['id']});
+    Map storeItemImage =
+        await ApiRequest.getStoreItemImage({'id': store[0]['id']});
+    if (store.isNotEmpty) {
+      await DbAccess.insertData(store[0], DbUtil.Tbl_Store);
+    }
+    if (location.isNotEmpty) {
+      await DbAccess.insertData(location[0], DbUtil.Tbl_GioLocation);
+    }
+    if (approvalImage.isNotEmpty) {
+      await DbAccess.insertData(approvalImage[0], DbUtil.Tbl_ApprovalImg);
+    }
+    if (storeImage.isNotEmpty) {
+      storeImage.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_StoreImg);
+      });
+    }
+    if (storeitem.isNotEmpty) {
+      storeitem.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_StoreItem);
+      });
+    }
+    if (storeItemImage.isNotEmpty) {
+      storeItemImage.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);
+      });
+    }
   }
 
   static Future<void> loadOtherData() async {
@@ -164,34 +243,51 @@ class DataController {
     Map statusType = await ApiRequest.fetchStatusType({});
     Map category = await ApiRequest.getCategory({});
     Map tags = await ApiRequest.getTags({});
-    if(notificationType.isNotEmpty){notificationType.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_NotificationType);});}
-    if(statusType.isNotEmpty){statusType.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_StatusType);});}
-    if(category.isNotEmpty){category.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemCategory);});}
-    if(tags.isNotEmpty){tags.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemTags);});}
+    if (notificationType.isNotEmpty) {
+      notificationType.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_NotificationType);
+      });
+    }
+    if (statusType.isNotEmpty) {
+      statusType.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_StatusType);
+      });
+    }
+    if (category.isNotEmpty) {
+      category.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_ItemCategory);
+      });
+    }
+    if (tags.isNotEmpty) {
+      tags.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_ItemTags);
+      });
+    }
   }
 
   static Future<Map> getItemById(id) async {
-   List items = await DbAccess.getDataListWhere(DbUtil.Tbl_StoreItem, 'id='+id);
-   return items[0];
+    List items =
+        await DbAccess.getDataListWhere(DbUtil.Tbl_StoreItem, 'id=' + id);
+    return items[0];
   }
 
   static Future<List> getStoreItem() async {
     return await DbAccess.getDataList(DbUtil.Tbl_StoreItem);
   }
 
-  static Future<Map<String,dynamic>> getUserCredential() async {
+  static Future<Map<String, dynamic>> getUserCredential() async {
     return await DbAccess.getData(DbUtil.Tbl_User);
   }
 
-  static Future<Map<String,dynamic>> getUserAccount() async {
+  static Future<Map<String, dynamic>> getUserAccount() async {
     return await DbAccess.getData(DbUtil.Tbl_UserAccount);
   }
 
-  static Future<Map<String,dynamic>> getStore() async {
+  static Future<Map<String, dynamic>> getStore() async {
     return await DbAccess.getData(DbUtil.Tbl_Store);
   }
 
-  static Future<Map<String,dynamic>> getLocation() async {
+  static Future<Map<String, dynamic>> getLocation() async {
     return await DbAccess.getData(DbUtil.Tbl_GioLocation);
   }
 
@@ -204,58 +300,65 @@ class DataController {
   }
 
   static Future<List> getCategory() async {
-    return await DbAccess.getDataListBy(DbUtil.Tbl_ItemCategory,'categoryName');
+    return await DbAccess.getDataListBy(
+        DbUtil.Tbl_ItemCategory, 'categoryName');
   }
 
   static Future<List> getTags() async {
-    return await DbAccess.getDataListBy(DbUtil.Tbl_ItemTags,'tagName');
+    return await DbAccess.getDataListBy(DbUtil.Tbl_ItemTags, 'tagName');
   }
 
-  static Future<Map> savingUserData(user,userAccount) async {
-    if(await HpController.hasConnection())return {'Connection':'Connection Error'};
-    await DbAccess.updateData(user,DbUtil.Tbl_User);
-    await DbAccess.updateData(userAccount,DbUtil.Tbl_UserAccount);
+  static Future<Map> savingUserData(user, userAccount) async {
+    if (await HpController.hasConnection())
+      return {'Connection': 'Connection Error'};
+    await DbAccess.updateData(user, DbUtil.Tbl_User);
+    await DbAccess.updateData(userAccount, DbUtil.Tbl_UserAccount);
     await ApiRequest.registerUser(user);
     await ApiRequest.registerAccount(userAccount);
-    return {'Connection':'Connection Success'};
+    return {'Connection': 'Connection Success'};
   }
 
-  static Future<Map> savingStoreDetail(store,location) async {
-    if(await HpController.hasConnection())return {'Connection':'Connection Error'};
+  static Future<Map> savingStoreDetail(store, location) async {
+    if (await HpController.hasConnection())
+      return {'Connection': 'Connection Error'};
     await DbAccess.updateData(store, DbUtil.Tbl_Store);
     await DbAccess.updateData(location, DbUtil.Tbl_GioLocation);
     await ApiRequest.insertStoreLocation(location);
     await ApiRequest.registerStore(store);
-    return {'Connection':'Connection Success'};
+    return {'Connection': 'Connection Success'};
   }
 
   static Future<String> savingItemDetail(item) async {
-    if(await HpController.hasConnection()){
+    if (await HpController.hasConnection()) {
       await ApiRequest.insertItem(item);
       await DbAccess.updateData(item, DbUtil.Tbl_StoreItem);
       return 'Item Updated';
     }
     return 'Cannot Update Item due to Connection';
   }
- 
+
   static Future<List> getNotification() async {
     Map userAccount = await DbAccess.getData(DbUtil.Tbl_UserAccount);
-    if(await ApiRequest.testConnection()){
+    if (await ApiRequest.testConnection()) {
       await DbAccess.dropTable(DbUtil.Tbl_Notification);
-      Map notification = await ApiRequest.getNotification({'userId':userAccount['id']});
-      notification.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_Notification);});
+      Map notification =
+          await ApiRequest.getNotification({'userId': userAccount['id']});
+      notification.forEach((key, value) async {
+        await DbAccess.insertData(value, DbUtil.Tbl_Notification);
+      });
     }
     return await DbAccess.getDataList(DbUtil.Tbl_Notification);
   }
 
   static Future<void> updateNotification(data) async {
-    if(await ApiRequest.testConnection()){
+    if (await ApiRequest.testConnection()) {
       await ApiRequest.updateNotification(data);
     }
   }
 
   static Future<Map> getAddresses() async {
-    if(await HpController.hasConnection()) return await ApiRequest.getAddress({});
+    if (await HpController.hasConnection())
+      return await ApiRequest.getAddress({});
     return {};
   }
 
@@ -263,42 +366,69 @@ class DataController {
     String date = DateTime.now().toLocal().toString();
     var id = await DbAccess.getData(DbUtil.Tbl_UserAccount);
     var pplDeduction = data[3].text == id['zipCode'] ? 1 : 0;
-    
-    if(!await HpController.hasConnection()) return 'No Connection';
-    if((await ApiRequest.getUserAccount({'zipCode':data[3].text})).isEmpty || 
-                                        (await ApiRequest.getUserAccount({'zipCode':data[3].text})).length - pplDeduction <= 0) 
-                                        return 'Cant Send Due to No Users on That Location';
-                                        
-    var resultItemDetail = await ApiRequest.insertBidItemDetail(BidItemDetail(itemName: data[0].text,itemPriceorBudget: data[2].text,
-                                                                              description: data[1].text).toMapWOid());
-    var resultItem = await ApiRequest.insertBidItem(BidItem(bidItem: resultItemDetail[0]['id'],
-                                                            datetime: date,sendLocation: data[3].text).toMapWOid(),);
-    await ApiRequest.insertBidItemManager(BidItemManager(ownerId: id['id'],bidItemId: resultItem[0]['id'],bidStatus: '5').toMap());
-    var pplsended = await distributeRequest(resultItem[0]['id'], data,resultItemDetail[0]['id'],date);
-    if(images.isNotEmpty)await ImageController.uploadBidImage(resultItem[0]['bidItem'], images);
+
+    if (!await HpController.hasConnection()) return 'No Connection';
+    if ((await ApiRequest.getUserAccount({'zipCode': data[3].text})).isEmpty ||
+        (await ApiRequest.getUserAccount({'zipCode': data[3].text})).length -
+                pplDeduction <=
+            0) return 'Cant Send Due to No Users on That Location';
+
+    var resultItemDetail = await ApiRequest.insertBidItemDetail(BidItemDetail(
+            itemName: data[0].text,
+            itemPriceorBudget: data[2].text,
+            description: data[1].text)
+        .toMapWOid());
+    var resultItem = await ApiRequest.insertBidItem(
+      BidItem(
+              bidItem: resultItemDetail[0]['id'],
+              datetime: date,
+              sendLocation: data[3].text)
+          .toMapWOid(),
+    );
+    await ApiRequest.insertBidItemManager(BidItemManager(
+            ownerId: id['id'], bidItemId: resultItem[0]['id'], bidStatus: '5')
+        .toMap());
+    var pplsended = await distributeRequest(
+        resultItem[0]['id'], data, resultItemDetail[0]['id'], date);
+    if (images.isNotEmpty)
+      await ImageController.uploadBidImage(resultItem[0]['bidItem'], images);
     return pplsended;
   }
 
-  static Future<String> distributeRequest(bidId,data,itemId,date) async {
+  static Future<String> distributeRequest(bidId, data, itemId, date) async {
     num ppl = 0;
     var user = await DbAccess.getData(DbUtil.Tbl_UserAccount);
-    var people =  await ApiRequest.fetchUsersbyLocation({'zipCode':data[3].text});
-    if(people.isNotEmpty){people.forEach((key, value) async {
-      if(value['id'] != user['id']){
-        await ApiRequest.updateNotification(UserNotification(userId: value['id'],
-                      message: 'Hey Somebody is looking for '+data[0].text+' on your Location with a Budget of P'+data[2].text,
-                      dateRecieved: date,notificationType: '4',status: '10').toMapWOid());
-        await ApiRequest.insertBidder(Bidders(bidItemId: bidId,accountId: value['id'],
-                                      suggestedItemId: itemId,requestStatus: '12').toMapWOid());
-      }
-    });}
+    var people =
+        await ApiRequest.fetchUsersbyLocation({'zipCode': data[3].text});
+    if (people.isNotEmpty) {
+      people.forEach((key, value) async {
+        if (value['id'] != user['id']) {
+          await ApiRequest.updateNotification(UserNotification(
+                  userId: value['id'],
+                  message: 'Hey Somebody is looking for ' +
+                      data[0].text +
+                      ' on your Location with a Budget of P' +
+                      data[2].text,
+                  dateRecieved: date,
+                  notificationType: '4',
+                  status: '10')
+              .toMapWOid());
+          await ApiRequest.insertBidder(Bidders(
+                  bidItemId: bidId,
+                  accountId: value['id'],
+                  suggestedItemId: itemId,
+                  requestStatus: '12')
+              .toMapWOid());
+        }
+      });
+    }
     ppl = data[3].text == user['zipCode'] ? people.length - 1 : people.length;
-    return ''+ppl.toString();
+    return '' + ppl.toString();
   }
 
   static Future<String> removeRequest(bidId) async {
     var hasConnection = await HpController.hasConnection();
-    if(hasConnection){
+    if (hasConnection) {
       await ImageController.removeBidImages(bidId);
     }
     return hasConnection.toString();
@@ -307,154 +437,195 @@ class DataController {
   static Future<List> getRequestItems() async {
     Map user = await DbAccess.getData(DbUtil.Tbl_UserAccount);
     Map bidItem = {};
-    List itemManager = [],itemImage = [];
+    List itemManager = [], itemImage = [];
     bool hasConnection = await HpController.hasConnection();
-    if(hasConnection){
-      bidItem = await ApiRequest.fetchBidItems({'ownerId':user['id']});
-      try{
-        if(bidItem.isNotEmpty){
-          for(int i=0;i<bidItem.length;i++){
-            itemManager.add((await ApiRequest.fetchBidItemManager({'bidItemId':bidItem[i]['id']}))[0]);
-            itemImage.add((await ApiRequest.fetchBidImage({'parentId':bidItem[i]['bidItem']}))[0] ?? {});
+    if (hasConnection) {
+      bidItem = await ApiRequest.fetchBidItems({'ownerId': user['id']});
+      try {
+        if (bidItem.isNotEmpty) {
+          for (int i = 0; i < bidItem.length; i++) {
+            itemManager.add((await ApiRequest.fetchBidItemManager(
+                {'bidItemId': bidItem[i]['id']}))[0]);
+            itemImage.add((await ApiRequest.fetchBidImage(
+                    {'parentId': bidItem[i]['bidItem']}))[0] ??
+                {});
           }
         }
-      }catch(e){
+      } catch (e) {
         await getRequestItems();
       }
     }
-    return [bidItem,itemManager,itemImage,hasConnection];
+    return [bidItem, itemManager, itemImage, hasConnection];
   }
 
   static Future<List> getRequestedItems() async {
     Map user = await DbAccess.getData(DbUtil.Tbl_UserAccount);
     Map otherBidItem = {};
-    List itemDetail = [],itemImage = [],bidItem = [],bidManager = [],userDetail = [];
+    List itemDetail = [],
+        itemImage = [],
+        bidItem = [],
+        bidManager = [],
+        userDetail = [];
     bool hasConnection = await HpController.hasConnection();
-     if(hasConnection){
-      otherBidItem = await ApiRequest.getOtherBidItems({'ownerId':user['id']});
-      try{
-        if(otherBidItem.isNotEmpty){
-          for(int i=0;i<otherBidItem.length;i++){
-            Map bidItemResult = (await ApiRequest.fetchBidItem({'id':otherBidItem[i]['bidItemId']}))[0];
+    if (hasConnection) {
+      otherBidItem = await ApiRequest.getOtherBidItems({'ownerId': user['id']});
+      try {
+        if (otherBidItem.isNotEmpty) {
+          for (int i = 0; i < otherBidItem.length; i++) {
+            Map bidItemResult = (await ApiRequest.fetchBidItem(
+                {'id': otherBidItem[i]['bidItemId']}))[0];
             bidItem.add(bidItemResult);
-            itemDetail.add((await ApiRequest.fetchBidItemDetail({'id':bidItemResult['bidItem']}))[0]);
-            itemImage.add((await ApiRequest.fetchBidImage({'parentId':bidItemResult['bidItem']}))[0] ?? {});
-            Map bidManagerResult = (await ApiRequest.fetchBidItemManager({'bidItemId':otherBidItem[i]['bidItemId']}))[0];
+            itemDetail.add((await ApiRequest.fetchBidItemDetail(
+                {'id': bidItemResult['bidItem']}))[0]);
+            itemImage.add((await ApiRequest.fetchBidImage(
+                    {'parentId': bidItemResult['bidItem']}))[0] ??
+                {});
+            Map bidManagerResult = (await ApiRequest.fetchBidItemManager(
+                {'bidItemId': otherBidItem[i]['bidItemId']}))[0];
             bidManager.add(bidManagerResult);
-            userDetail.add((await ApiRequest.getUserAccount({'id':bidManagerResult['ownerId']}))[0]);
+            userDetail.add((await ApiRequest.getUserAccount(
+                {'id': bidManagerResult['ownerId']}))[0]);
           }
         }
-      } catch(e){
+      } catch (e) {
         await getRequestedItems();
       }
-      
     }
-    return [otherBidItem,bidItem,itemDetail,itemImage,bidManager,userDetail,hasConnection];
+    return [
+      otherBidItem,
+      bidItem,
+      itemDetail,
+      itemImage,
+      bidManager,
+      userDetail,
+      hasConnection
+    ];
   }
 
   static Future<Map> getItemDetails(itemId) async {
-    return await ApiRequest.fetchBidItemDetail({'id':itemId});
+    return await ApiRequest.fetchBidItemDetail({'id': itemId});
   }
 
   static Future<Map> getBidders(itemId) async {
-    if(await HpController.hasConnection()) return await ApiRequest.fetchBidder({'bidItemId':itemId,'requestStatus': '16'});
+    if (await HpController.hasConnection())return await ApiRequest.fetchBidder({'bidItemId': itemId, 'requestStatus': '16'});
     return {};
   }
 
-  static Future<String> requestAcceptUpdate(bidderId,BidItemDetail feedbackItem,List images,[method = 'insert']) async{
-    if(!await HpController.hasConnection()) return null;
-    if(method == 'insert'){
-      Map item = (await ApiRequest.insertBidItemDetail(feedbackItem.toMapWOid()))[0];
-      if(images.isNotEmpty) await ImageController.uploadBidImage(item['id'], images);
-      await ApiRequest.insertBidder({'id':bidderId,'suggestedItemId':item['id'],'requestStatus':'16'});
+  static Future<Map> getBidderManager(bidId) async {
+    if(!await HpController.hasConnection())return {};
+    return await ApiRequest.fetchBidItemManager({'bidItemId':bidId});
+  }
+
+  static Future<String> requestAcceptUpdate(
+      bidderId, BidItemDetail feedbackItem, List images,
+      [method = 'insert']) async {
+    if (!await HpController.hasConnection()) return null;
+    if (method == 'insert') {
+      Map item =
+          (await ApiRequest.insertBidItemDetail(feedbackItem.toMapWOid()))[0];
+      if (images.isNotEmpty)
+        await ImageController.uploadBidImage(item['id'], images);
+      await ApiRequest.insertBidder({
+        'id': bidderId,
+        'suggestedItemId': item['id'],
+        'requestStatus': '16'
+      });
       return 'Feedback Sent';
     } else {
-      Map item = (await ApiRequest.insertBidItemDetail(feedbackItem.toMapWid()))[0];
-      if(images.isNotEmpty) await ImageController.uploadBidImage(item['id'], images);
+      Map item =
+          (await ApiRequest.insertBidItemDetail(feedbackItem.toMapWid()))[0];
+      if (images.isNotEmpty)
+        await ImageController.uploadBidImage(item['id'], images);
       return 'Feedback Detail Update';
     }
   }
 
-  static Future<List> getBidderDetails(userId,itemId) async {
-    if(!await HpController.hasConnection()) return [];
-    Map user = (await ApiRequest.getUserAccount({'id':userId}))[0];
-    Map item = (await ApiRequest.fetchBidItemDetail({'id':itemId}))[0];
-    Map userImage = await ApiRequest.getUserImage({'parentId':userId});
-    Map itemImage = await ApiRequest.fetchBidImage({'parentId':itemId});
-    return [user,item,userImage,itemImage];
+  static Future<List> getBidderDetails(userId, itemId) async {
+    if (!await HpController.hasConnection()) return [];
+    Map user = (await ApiRequest.getUserAccount({'id': userId}))[0];
+    Map item = (await ApiRequest.fetchBidItemDetail({'id': itemId}))[0];
+    Map userImage = await ApiRequest.getUserImage({'parentId': userId});
+    Map itemImage = await ApiRequest.fetchBidImage({'parentId': itemId});
+    return [user, item, userImage, itemImage];
   }
 
   static Future<String> requestDecline(bidderId) async {
-    if(!await HpController.hasConnection()) return null;
-    await ApiRequest.insertBidder({'id':bidderId,'requestStatus':'17'});
+    if (!await HpController.hasConnection()) return null;
+    await ApiRequest.insertBidder({'id': bidderId, 'requestStatus': '17'});
     return 'Request Decline';
   }
 
   static Future<Map> insertBidderMessage(BidChat data) async {
     String datetime = DateTime.now().toLocal().toString();
-    if(!await HpController.hasConnection()) return {'Connection':'false'};
+    if (!await HpController.hasConnection()) return {'Connection': 'false'};
     Map yourId = await DbAccess.getData(DbUtil.Tbl_UserAccount);
     data.datetime = datetime;
     data.senderId = yourId['id'];
     return await ApiRequest.insertBidChat(data.toMapWOid());
   }
 
-  static Future<Map> getBidderMessage(bidId,otherId) async {
-    if(!await HpController.hasConnection())return {'Connection':'false'};
+  static Future<Map> getBidderMessage(bidId, otherId) async {
+    if (!await HpController.hasConnection()) return {'Connection': 'false'};
     Map yourId = await DbAccess.getData(DbUtil.Tbl_UserAccount);
-    return await ApiRequest.getBidChat({'bidId': bidId,'user1Id':yourId['id'],'user2Id':otherId});
+    return await ApiRequest.getBidChat(
+        {'bidId': bidId, 'user1Id': yourId['id'], 'user2Id': otherId});
   }
 
   static Future<Map> getStores() async {
     Map myStore = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
-      if(myStore.isNotEmpty)return await ApiRequest.getStores({'id':myStore['id']});
-      return await ApiRequest.getStores({'id':'0'});
+    if(await HpController.hasConnection()) {
+      if(myStore.isNotEmpty)
+        return await ApiRequest.getStores({'id': myStore['id']});
+      return await ApiRequest.getStores({'id': '0'});
     }
-    return {'id':'0'};
+    return {'id': '0'};
   }
 
   static Future<List> getStoreDetails(id) async {
-    Map storeInfo = (await ApiRequest.getStore({'id':id}))[0];
-    Map storeImage = (await ApiRequest.getStoreImage({'parentId':id}))[0];
+    Map storeInfo = (await ApiRequest.getStore({'id': id}))[0];
+    Map storeImage = (await ApiRequest.getStoreImage({'parentId': id}))[0];
     List<Map> storeItems = [];
     List<Map> storeItemsImage = [];
-    Map items = await ApiRequest.getStoreItem({'storeId':id});
-    for(int i=0;i<items.length;i++){
-        if(i == 5) break;
-        storeItems.add(items[i]);
-        storeItemsImage.add((await ApiRequest.getItemImage({'parentId':items[i]['id']}))[0]);
+    Map items = await ApiRequest.getStoreItem({'storeId': id});
+    for (int i = 0; i < items.length; i++) {
+      if (i == 5) break;
+      storeItems.add(items[i]);
+      storeItemsImage.add(
+          (await ApiRequest.getItemImage({'parentId': items[i]['id']}))[0]);
     }
-    return [storeInfo,storeImage,storeItems,storeItemsImage];
+    return [storeInfo, storeImage, storeItems, storeItemsImage];
   }
 
   static Future<List> getFullStoreDetails(id) async {
-    Map storeInfo = (await ApiRequest.getStore({'id':id}))[0];
-    Map storeImage = (await ApiRequest.getStoreImage({'parentId':id}))[0];
+    Map storeInfo = (await ApiRequest.getStore({'id': id}))[0];
+    Map storeImage = (await ApiRequest.getStoreImage({'parentId': id}))[0];
     List<Map> storeItems = [];
     List<Map> storeItemsImage = [];
-    Map items = await ApiRequest.getStoreItem({'storeId':id});
-    for(int i=0;i<items.length;i++){
-        storeItems.add(items[i]);
-        storeItemsImage.add((await ApiRequest.getItemImage({'parentId':items[i]['id']}))[0]);
+    Map items = await ApiRequest.getStoreItem({'storeId': id});
+    for (int i = 0; i < items.length; i++) {
+      storeItems.add(items[i]);
+      storeItemsImage.add(
+          (await ApiRequest.getItemImage({'parentId': items[i]['id']}))[0]);
     }
-    return [storeInfo,storeImage,storeItems,storeItemsImage];
+    return [storeInfo, storeImage, storeItems, storeItemsImage];
   }
-
 }
 
-class ImageController{
-  static String userImageNetLocation = RequestUrl.baseUrl+'assets/UserImage/';
-  static String storeImageNetLocation = RequestUrl.baseUrl+'assets/StoreImage/';
-  static String itemImageNetLocation = RequestUrl.baseUrl+'assets/ItemImage/';
+class ImageController {
+  static String userImageNetLocation = RequestUrl.baseUrl + 'assets/UserImage/';
+  static String storeImageNetLocation =
+      RequestUrl.baseUrl + 'assets/StoreImage/';
+  static String itemImageNetLocation = RequestUrl.baseUrl + 'assets/ItemImage/';
 
-  static Future<void> savingProfileImage(Map imageData4db,Map imageData4Api) async {
+  static Future<void> savingProfileImage(
+      Map imageData4db, Map imageData4Api) async {
     await ApiRequest.uploadImageProfile(imageData4Api);
-    await DbAccess.updateData(imageData4db,DbUtil.Tbl_UserImg);
+    await DbAccess.updateData(imageData4db, DbUtil.Tbl_UserImg);
   }
 
   static Future<List> getItemImg(id) async {
-    return await DbAccess.getDataListWhere(DbUtil.Tbl_ItemImg,'parentId = '+id);
+    return await DbAccess.getDataListWhere(
+        DbUtil.Tbl_ItemImg, 'parentId = ' + id);
   }
 
   static Future<List> getItemImgs() async {
@@ -462,18 +633,18 @@ class ImageController{
   }
 
   static Future<Map> getItemImages(id) async {
-    return await ApiRequest.getItemImage({'parentId':id});
+    return await ApiRequest.getItemImage({'parentId': id});
   }
 
-  static Future<Map<String,dynamic>> getUserImage() async {
+  static Future<Map<String, dynamic>> getUserImage() async {
     return await DbAccess.getData(DbUtil.Tbl_UserImg);
   }
 
   static Future<Map> fetchUserImage(id) async {
-    return await ApiRequest.getUserImage({'parentId':id});
+    return await ApiRequest.getUserImage({'parentId': id});
   }
 
-  static Future<Map<String,dynamic>> getApprovalImage() async {
+  static Future<Map<String, dynamic>> getApprovalImage() async {
     return await DbAccess.getData(DbUtil.Tbl_ApprovalImg);
   }
 
@@ -483,13 +654,13 @@ class ImageController{
 
   static Future<String> addStoreImage(Map data) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
+    if (await HpController.hasConnection()) {
       await ApiRequest.insertStoreImage(data);
-      Map images = await ApiRequest.getStoreImage({'parentId':store['id']});
+      Map images = await ApiRequest.getStoreImage({'parentId': store['id']});
       await DbAccess.dropTable(DbUtil.Tbl_StoreImg);
-      if(images.isNotEmpty){
-        for(int i=0;i<images.length;i++){
-        await DbAccess.insertData(images[i], DbUtil.Tbl_StoreImg);
+      if (images.isNotEmpty) {
+        for (int i = 0; i < images.length; i++) {
+          await DbAccess.insertData(images[i], DbUtil.Tbl_StoreImg);
         }
       }
       return 'Image Uploaded';
@@ -499,13 +670,15 @@ class ImageController{
 
   static Future<String> removeStoreImage(ImageData image) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
-      await ApiRequest.deleteStoreImage({'table':'store_img','id':image.id,'filename':image.filename});
-      Map storeImage = await ApiRequest.getStoreImage({'parentId':store['id']});
+    if (await HpController.hasConnection()) {
+      await ApiRequest.deleteStoreImage(
+          {'table': 'store_img', 'id': image.id, 'filename': image.filename});
+      Map storeImage =
+          await ApiRequest.getStoreImage({'parentId': store['id']});
       await DbAccess.dropTable(DbUtil.Tbl_StoreImg);
-      if(storeImage.isNotEmpty){
-        for(int i=0;i<storeImage.length;i++){
-        await DbAccess.insertData(storeImage[i], DbUtil.Tbl_StoreImg);
+      if (storeImage.isNotEmpty) {
+        for (int i = 0; i < storeImage.length; i++) {
+          await DbAccess.insertData(storeImage[i], DbUtil.Tbl_StoreImg);
         }
       }
       return 'Image Deleted';
@@ -513,18 +686,23 @@ class ImageController{
     return 'Cannot delete Image due to Connection';
   }
 
-  static Future<String> addStoreItemImages(List<ImageData> data,id) async {
+  static Future<String> addStoreItemImages(List<ImageData> data, id) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
-      for(int i =0;i<data.length;i++){
+    if (await HpController.hasConnection()) {
+      for (int i = 0; i < data.length; i++) {
         data[i].parentId = id;
         await ApiRequest.insertItemImage(data[i].toMapWOidUpload());
       }
       Future.delayed(Duration(seconds: 3));
-      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
-      if(storeItemImage.isNotEmpty){
+      Map storeItemImage =
+          await ApiRequest.getStoreItemImage({'id': store['id']});
+      if (storeItemImage.isNotEmpty) {
         await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-        if(storeItemImage.isNotEmpty){storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});}
+        if (storeItemImage.isNotEmpty) {
+          storeItemImage.forEach((key, value) async {
+            await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);
+          });
+        }
       }
       return 'Item Registered';
     }
@@ -533,13 +711,15 @@ class ImageController{
 
   static Future<String> addStoreItemImage(ImageData image) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
+    if (await HpController.hasConnection()) {
       var result = await ApiRequest.insertItemImage(image.toMapWOidUpload());
-      if(result.isNotEmpty){
-        var images = await ApiRequest.getStoreItemImage({'id':store['id']});
-        if(images.isNotEmpty){
+      if (result.isNotEmpty) {
+        var images = await ApiRequest.getStoreItemImage({'id': store['id']});
+        if (images.isNotEmpty) {
           DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-          images.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});
+          images.forEach((key, value) async {
+            await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);
+          });
           return 'Image Added';
         }
       }
@@ -549,77 +729,87 @@ class ImageController{
 
   static Future<String> removeStoreItemImage(ImageData image) async {
     Map store = await DbAccess.getData(DbUtil.Tbl_Store);
-    if(await HpController.hasConnection()){
-      await ApiRequest.deleteItemImage({'table':'item_img','id':image.id,'filename':image.filename});
-      Map storeItemImage = await ApiRequest.getStoreItemImage({'id':store['id']});
-      if(storeItemImage.isNotEmpty){
+    if (await HpController.hasConnection()) {
+      await ApiRequest.deleteItemImage(
+          {'table': 'item_img', 'id': image.id, 'filename': image.filename});
+      Map storeItemImage =
+          await ApiRequest.getStoreItemImage({'id': store['id']});
+      if (storeItemImage.isNotEmpty) {
         await DbAccess.dropTable(DbUtil.Tbl_ItemImg);
-        storeItemImage.forEach((key, value) async {await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);});
+        storeItemImage.forEach((key, value) async {
+          await DbAccess.insertData(value, DbUtil.Tbl_ItemImg);
+        });
         return 'Image Deleted';
       }
     }
     return 'Cannot delete Image due to Connection';
   }
 
-  static Future<String> uploadBidImage(id,List<File> images) async {
-    images.forEach((element) async { 
-      await ApiRequest.insertBidImage(ImageData(parentId: id,filename: Random().nextInt(1000000).toString()+'_'+element.path.split('/').last,
-                                                binaryfile: base64Encode(element.readAsBytesSync())).toMapWOidUpload());
+  static Future<String> uploadBidImage(id, List<File> images) async {
+    images.forEach((element) async {
+      await ApiRequest.insertBidImage(ImageData(
+              parentId: id,
+              filename: Random().nextInt(1000000).toString() +
+                  '_' +
+                  element.path.split('/').last,
+              binaryfile: base64Encode(element.readAsBytesSync()))
+          .toMapWOidUpload());
     });
     return null;
   }
 
   static Future<String> removeBidImage(data) async {
-    if(!await HpController.hasConnection()) return null;
-    await ApiRequest.removeBidImage({'table' : 'bid_item_img','id': data['id'],'filename': data['filename']});
+    if (!await HpController.hasConnection()) return null;
+    await ApiRequest.removeBidImage({
+      'table': 'bid_item_img',
+      'id': data['id'],
+      'filename': data['filename']
+    });
     return 'Image Remove';
   }
 
   static Future<String> removeBidImages(String id) async {
-    var bidders = await ApiRequest.fetchBidder({'bidItemId':id});
+    var bidders = await ApiRequest.fetchBidder({'bidItemId': id});
     bidders.forEach((key, value) async {
-      await ApiRequest.fetchBidImage({'parentId':value['suggestedItemId']});
+      await ApiRequest.fetchBidImage({'parentId': value['suggestedItemId']});
     });
-    var bidItem = await ApiRequest.fetchBidItem({'id':id});
-    ApiRequest.fetchBidImage({'pare':bidItem[0]['bidItem']});
+    var bidItem = await ApiRequest.fetchBidItem({'id': id});
+    ApiRequest.fetchBidImage({'pare': bidItem[0]['bidItem']});
     return null;
   }
 
   static Future<Map> getBidImages(itemId) async {
-    return await ApiRequest.fetchBidImage({'parentId':itemId});
+    return await ApiRequest.fetchBidImage({'parentId': itemId});
   }
 
-  static Future<String> uploadRequestImage(){
+  static Future<String> uploadRequestImage() {
     return null;
   }
 
-  static Future<void> uploadImageProfile(data) async {
+  static Future<void> uploadImageProfile(data) async {}
 
+  static String getUserNetImage(filename) {
+    return userImageNetLocation + filename;
   }
 
-  static String  getUserNetImage(filename){
-    return userImageNetLocation+filename;
+  static String getStoreNetImage(filename) {
+    return storeImageNetLocation + filename;
   }
 
-  static String  getStoreNetImage(filename){
-    return storeImageNetLocation+filename;
-  }
-
-  static String  getItemNetImage(filename){
-    return itemImageNetLocation+filename;
+  static String getItemNetImage(filename) {
+    return itemImageNetLocation + filename;
   }
 
   static Future<File> imageCompression(File file) async {
-    String  tempfileDir = await TempDirectory.baseDirectory;
+    String tempfileDir = await TempDirectory.baseDirectory;
     print(tempfileDir);
     return file;
     //return await FlutterImageCompress.compressAndGetFile(baseDir.path, file.path,minWidth: 120,minHeight: 120,quality: 50);
   }
-
 }
-//unused
-class TempDirectory{
 
+//unused
+class TempDirectory {
   static Future<String> get baseDirectory async {
     Directory baseDir = await getApplicationDocumentsDirectory();
     return baseDir.path;
@@ -627,82 +817,87 @@ class TempDirectory{
 
   static Future<String> get tempDirCompression async {
     Directory tempDir = Directory('$baseDirectory/tempCompression');
-    if(await tempDir.exists()){
+    if (await tempDir.exists()) {
       return tempDir.path;
     } else {
-      return await Directory('$baseDirectory/tempCompression').create(recursive: true).then((value) => value.path);
+      return await Directory('$baseDirectory/tempCompression')
+          .create(recursive: true)
+          .then((value) => value.path);
     }
   }
 
   static Future<void> deleteCompressionDir() async {
     Directory dir = Directory(await tempDirCompression);
-    if(await dir.exists()){
+    if (await dir.exists()) {
       dir.delete(recursive: true);
     }
   }
-
 }
 
-class SharedPref{
-   
+class SharedPref {
   static Future<bool> isLogin() async {
-    SharedPreferences sf = await  SharedPreferences.getInstance();
-    if(!sf.containsKey('isLogin')){
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    if (!sf.containsKey('isLogin')) {
       setLogin(false);
       return false;
     }
     return sf.getBool('isLogin');
   }
+
   static setLogin(isLog) async {
-    SharedPreferences sf = await  SharedPreferences.getInstance();
+    SharedPreferences sf = await SharedPreferences.getInstance();
     sf.setBool('isLogin', isLog);
   }
-  
 }
 
 class LoadingScreen {
-
-  static Future<Widget> showLoading(BuildContext context,msg) async {
+  static Future<Widget> showLoading(BuildContext context, msg) async {
     return showDialog(
-      context: context,
-      barrierDismissible: false,
-      child: AlertDialog(
-        elevation: 5,
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              margin: EdgeInsets.all(15),
-              child: Text(msg),
-            ),
-            Container(
-              child: CircularProgressIndicator(),
-            ),
-          ],
-        ),
-      )
-    );
+        context: context,
+        barrierDismissible: false,
+        child: AlertDialog(
+          elevation: 5,
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.all(15),
+                child: Text(msg),
+              ),
+              Container(
+                child: CircularProgressIndicator(),
+              ),
+            ],
+          ),
+        ));
   }
 
-  static Future<bool> showResultDialog(BuildContext context,String msg,double fsize){
+  static Future<bool> showResultDialog(
+      BuildContext context, String msg, double fsize) {
     return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context){
-        return AlertDialog(
-          elevation: 5.0,
-          content: Container(
-            height: MediaQuery.of(context).size.height*.05,
-            child: Center(child: Text(msg,style: TextStyle(fontSize: fsize),))
-            ),
-          actions: <Widget>[
-            FlatButton(
-              child: Container(child: Text('Ok'),),
-              onPressed: (){Navigator.pop(context);},
-            ),
-          ],
-        );
-      }
-    );
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            elevation: 5.0,
+            content: Container(
+                height: MediaQuery.of(context).size.height * .05,
+                child: Center(
+                    child: Text(
+                  msg,
+                  style: TextStyle(fontSize: fsize),
+                ))),
+            actions: <Widget>[
+              FlatButton(
+                child: Container(
+                  child: Text('Ok'),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        });
   }
 }

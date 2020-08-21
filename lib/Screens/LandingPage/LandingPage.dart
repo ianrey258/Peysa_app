@@ -52,9 +52,76 @@ class Home extends State<LandingPage> {
   }
   getLocation(){
     processLocation();
-    return _geoLocation.longitude != null ?LatLng(double.parse(_geoLocation.latitude), double.parse(_geoLocation.longitude)) : LatLng(0.0,0.0);
+    print(_geoLocation.latitude);
+    print(_geoLocation.longitude);
+    return _geoLocation.longitude != null ? LatLng(double.parse(_geoLocation.latitude), double.parse(_geoLocation.longitude)) : LatLng(0.0,0.0);
   }
   //GeoSection//
+
+  Widget mapping(){
+    return FutureBuilder(
+      future: HpController.hasConnection(),
+      builder: (_,snapshot){
+        if(snapshot.connectionState == ConnectionState.done && snapshot.hasData){
+          if(snapshot.data){
+            return Container(
+              color: Colors.white,
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                          //center: LatLng(0.0,0.0),
+                          center: getLocation(), 
+                          zoom: 15.0
+                        ),
+                      layers: [
+                        TileLayerOptions(
+                          urlTemplate: "https://api.mapbox.com/styles/v1/ianrey258/ckb28ett60xnh1iry8wtx3tlx/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
+                          additionalOptions: {
+                            'accessToken': 'pk.eyJ1IjoiaWFucmV5MjU4IiwiYSI6ImNrYjI3eXF0cTA4bjgyd28yeGJta2dtNmQifQ.LtqueENclx7vVAp6IfEusA',
+                            'id': 'mapbox.mapbox-streets-v8'
+                          }
+                        ),
+                        MarkerLayerOptions(
+                          markers : [
+                            Marker(
+                              point: getLocation(),
+                              builder: (_){
+                                return Container(child: Icon(Icons.person),);
+                              },
+                              width: 30,
+                              height: 30
+                            )
+                          ]
+                        )
+                      ],
+                    )
+                  ),
+                  // Container(
+                  //   padding: EdgeInsets.all(10),
+                  //   child: Align(
+                  //     alignment: Alignment.bottomRight,
+                  //     child: FloatingActionButton(
+                  //       backgroundColor: Colors.redAccent,
+                  //       child: Icon(FontAwesome.map_marker),
+                  //       onPressed: (){},
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+            );
+          }
+          return Center(child: Text('Check Internet Connection'),);
+        }
+        return Center(child: CircularProgressIndicator(),);
+      }
+    );
+  }
 
   Future<bool> showFilter() async {
     return await showDialog(
@@ -301,7 +368,8 @@ class Home extends State<LandingPage> {
         builder: (_,snapshot){
           if(snapshot.connectionState == ConnectionState.done){
             if(snapshot.data.isNotEmpty){
-              if(snapshot.data['id'] == 0)return Container(child: Text('Check Internet Connection'),);
+              print(snapshot.data);
+              if(snapshot.data['id'] == '0')return Center(child: Text('Check Internet Connection'),);
               return Container(
                 child: ListView.builder(
                   itemCount: snapshot.data.length,
@@ -326,7 +394,6 @@ class Home extends State<LandingPage> {
   }
 
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
     return DefaultTabController(
       length: 2,
       initialIndex: 0,
@@ -337,7 +404,7 @@ class Home extends State<LandingPage> {
           actions: <Widget>[
             Container(
               padding: EdgeInsets.all(5),
-              width: size.width * .7,
+              width: MediaQuery.of(context).size.width * .7,
               child: TextField(
                 controller: _search,
                 decoration: InputDecoration(
@@ -383,75 +450,7 @@ class Home extends State<LandingPage> {
           physics: NeverScrollableScrollPhysics(),
           children: <Widget>[
             stores(),
-            // Container(
-            //   color: Colors.transparent,
-            //   child: ListView(
-            //     padding: EdgeInsets.all(0),
-            //     children: <Widget>[
-            //       // Divider(),
-            //       // store(Store.getListStore()[0], "50m Away"),
-            //       // Divider(),
-            //       // store(Store.getListStore()[1], "100m Away"),
-            //       // Divider(),
-            //       // store(Store.getListStore()[2], "120m Away"),
-            //       // Divider(),
-            //       // store(Store.getListStore()[3], "180m Away"),
-            //       // Divider(),
-            //       // store(Store.getListStore()[4], "200m Away"),
-            //     ],
-            //   ),
-            // ),
-            Container(
-              color: Colors.white,
-              width: size.width,
-              height: size.height,
-              child: Column(
-                children: <Widget>[
-                  Expanded(
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                          center: LatLng(0.0,0.0),
-                          //center: getLocation(), 
-                          zoom: 5.0
-                        ),
-                      layers: [
-                        // TileLayerOptions(
-                        //   urlTemplate: "https://api.mapbox.com/styles/v1/ianrey258/ckb28ett60xnh1iry8wtx3tlx/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
-                        //   additionalOptions: {
-                        //     'accessToken': 'pk.eyJ1IjoiaWFucmV5MjU4IiwiYSI6ImNrYjI3eXF0cTA4bjgyd28yeGJta2dtNmQifQ.LtqueENclx7vVAp6IfEusA',
-                        //     'id': 'mapbox.mapbox-streets-v8'
-                        //   }
-                        // ),
-                        MarkerLayerOptions(
-                          markers : [
-                            Marker(
-                              point: getLocation(),
-                              builder: (_){
-                                return Container(child: Icon(Icons.person),);
-                              },
-                              width: 30,
-                              height: 30
-                            )
-                          ]
-                        )
-                      ],
-                    )
-                  ),
-                  // Container(
-                  //   padding: EdgeInsets.all(10),
-                  //   child: Align(
-                  //     alignment: Alignment.bottomRight,
-                  //     child: FloatingActionButton(
-                  //       backgroundColor: Colors.redAccent,
-                  //       child: Icon(FontAwesome.map_marker),
-                  //       onPressed: (){},
-                  //     ),
-                  //   ),
-                  // ),
-                ],
-              ),
-            ),
+            mapping(),
           ],
         ),
         floatingActionButton: FloatingActionButton(
